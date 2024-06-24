@@ -7,6 +7,8 @@ import { db } from '../../Firebase/firebaseConfig';
 import { datasDetailHead } from '../../datas/datasDetailHead';
 import TableEmployment from '../TableEmployment/Index';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { menuActif } from '../../redux/reducers/rootReducer';
 
 
 
@@ -22,6 +24,14 @@ const DetailUser = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state;
+  const dispatch = useDispatch();
+
+
+  useLayoutEffect(() => {
+
+    dispatch(menuActif(true));
+
+  }, [dispatch]);
 
   const StyledSelect = styled(Select)(({ theme }) => ({
     backgroundColor: 'white',
@@ -59,7 +69,7 @@ const DetailUser = () => {
   useEffect(() => {
     const fetchDetailUser = async () => {
       setLoad(true);
-      // const year = new Date().getFullYear(); // Année actuelle
+
       const startOfYear = new Date(selectDate, 0, 1); // Premier jour de l'année
       const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59); // Dernière seconde de l'année
 

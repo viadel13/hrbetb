@@ -1,4 +1,4 @@
-import { Box, Checkbox, IconButton, Stack, Table, TableCell, TableContainer, TableHead, TableRow, Typography, styled } from '@mui/material';
+import { Box, Checkbox, Grid, IconButton, Stack, Table, TableCell, TableContainer, TableHead, TableRow, Typography, styled } from '@mui/material';
 
 import add from '../../assets/images/add.svg';
 import TableEmployment from '../TableEmployment/Index';
@@ -6,6 +6,7 @@ import { datasHeadUsers } from '../../datas/datasHeadUsers';
 import { useEffect, useState } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
 import { db } from '../../Firebase/firebaseConfig';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 
 const Employes = () => {
@@ -14,6 +15,7 @@ const Employes = () => {
   const [datasEmployes, setDatasEmployes] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const navigate = useNavigate();
 
 
 
@@ -65,21 +67,7 @@ const Employes = () => {
   }));
 
   return (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        minHeight: '100vh',
-        backgroundColor: '#F9F9F9'
-      }}
-    >
-      <Box component='div' sx={{
-        flexGrow: 1,
-        backgroundColor: "#FFFFFF",
-        mx: 2,
-        borderRadius: '30px 30px 0 0'
-      }}>
+
 
         <>
           <Box sx={{
@@ -87,52 +75,98 @@ const Employes = () => {
             pt: 5,
             mb: 10
           }}>
-
-            <Stack spacing={1}>
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  color: '#BDBDBD'
-                }}
-              >
-                Employes
-              </Typography>
-              <Stack direction="row" spacing={2} alignItems='center' flex={1} justifyContent='space-between'>
-                <Stack direction="row" spacing={1} alignItems='center'>
-                  <Box sx={{
-                    backgroundColor: '#FF3F25',
-                    width: 6,
-                    height: 24,
-                    borderRadius: 12
-                  }}>
-
-                  </Box>
-                  <Typography
-                    sx={{
-                      fontSize: { xs: 17, sm: 24 },
-                      color: '#101214',
-                      fontWeight: 600
-                    }}
-                  >
-                    Liste des employés de Betb
-                  </Typography>
-                </Stack>
-
-                <StyledBoxNav>
-                  <img src={add} alt='add' />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={12} md={6}>
+                <Stack spacing={1}>
                   <Typography
                     sx={{
                       fontSize: 16,
-                      color: '#FFFFFF',
-                      ml: 1,
-                      display: { xs: 'none', sm: 'block' }
+                      color: '#BDBDBD'
                     }}
                   >
-                    Nouveau employé
+                    Employes
                   </Typography>
-                </StyledBoxNav>
-              </Stack>
-            </Stack>
+                  <Stack direction="row" spacing={2} alignItems='center' flex={1} justifyContent='space-between'>
+                    <Stack direction="row" spacing={1} alignItems='center'>
+                      <Box sx={{
+                        backgroundColor: '#FF3F25',
+                        width: 6,
+                        height: 24,
+                        borderRadius: 12
+                      }}>
+
+                      </Box>
+                      <Typography
+                        sx={{
+                          fontSize: { xs: 17, sm: 24 },
+                          color: '#101214',
+                          fontWeight: 600
+                        }}
+                      >
+                        Liste des employés de Betb
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                </Stack>
+              </Grid>
+              <Grid item xs={12} sm={12} md={6} sx={{ alignItems:'flex-end', display: 'flex', justifyContent:{xs: 'flex-start', sm: 'flex-start', md: 'flex-end'} }}>
+                  <Stack direction="row" spacing={2}>
+                  <NavLink to="addConges" style={{ textDecoration: 'none', color: '#101214' }}>
+  
+                    <StyledBoxNav 
+         
+                    >
+                      <img src={add} alt='add' />
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'none', sm: 'block' }
+                        }}
+                      >
+                        Ajouter un congé
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'block', sm: 'none' }
+                        }}
+                      >
+                      congé
+                      </Typography>
+                    </StyledBoxNav>
+                    </NavLink>
+                    <StyledBoxNav>
+                      <img src={add} alt='add' />
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'none', sm: 'block' }
+                        }}
+                      >
+                        Nouveau employé
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'block', sm: 'none' }
+                        }}
+                      >
+                         employé
+                      </Typography>
+                    </StyledBoxNav>
+                  </Stack>
+                
+              </Grid>
+            </Grid>
+
             <TableContainer sx={{ minWidth: '100%', mt: 2, whiteSpace: 'nowrap', overflowX: 'auto', '&::-webkit-scrollbar': { height: '8px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: '#FF3F25', borderRadius: '8px' }, '&::-webkit-scrollbar-thumb:hover': { backgroundColor: '#FF5733' }, '&::-webkit-scrollbar-track': { backgroundColor: '#F0F0F0', borderRadius: '8px', } }}>
               <Table>
                 <TableHead>
@@ -178,8 +212,7 @@ const Employes = () => {
 
 
         </>
-      </Box>
-    </Box>
+
   )
 }
 

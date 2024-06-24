@@ -1,11 +1,13 @@
 import { Autocomplete, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, styled } from '@mui/material'
 import { DateField } from '@mui/x-date-pickers';
 import { addDoc, collection, onSnapshot, query, } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { db } from '../../Firebase/firebaseConfig';
 import { useFormik } from "formik";
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
+import { useDispatch } from 'react-redux';
+import { menuActif } from '../../redux/reducers/rootReducer';
 
 
 const AddConges = () => {
@@ -15,6 +17,16 @@ const AddConges = () => {
   const [load, setLoad] = useState(false);
   const [reload, setReload] = useState(false);
   const [totalDays, setTotalDays] = useState(0);
+  const dispatch = useDispatch();
+
+
+  useLayoutEffect(() => {
+
+    dispatch(menuActif(true));
+
+  }, [dispatch]);
+
+
 
   const CustomPaper = styled('div')(({ theme }) => ({
     backgroundColor: 'white',

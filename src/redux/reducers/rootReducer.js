@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 
 const initialState = {
-    datasEm: '454',
+  activeLink: false,
 }
 
 const betbhrSlice = createSlice({
@@ -10,17 +10,17 @@ const betbhrSlice = createSlice({
     initialState,
 
     reducers: {
-        supprimer: (state, action) => {
+        menuActif: (state, action) => {
           return{
             ...state,
-            pannier: 'bonjour'
+            activeLink: action.payload
           }
         }
 
     }
 })
 
-export const { supprimer } =  betbhrSlice.actions;
+export const { menuActif } =  betbhrSlice.actions;
 
 
 export default  betbhrSlice.reducer;

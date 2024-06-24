@@ -6,20 +6,24 @@ import logo from '../../assets/images/logo.svg';
 import hambuger from '../../assets/images/hambuger.svg';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useLayoutEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { menuActif } from '../../redux/reducers/rootReducer';
 
 
 const Navbar = () => {
 
-  const[activeLink, setAcitveLink] = useState(false);
+  // const[activeLink, setAcitveLink] = useState(false);
   const location = useLocation();
+  const activeLink = useSelector(state => state.betbhr.activeLink)
+  const dispatch = useDispatch();
 
 
   useLayoutEffect(() => {
     // Check the current pathname and set activeLink accordingly
     if (location.pathname === '/employes') {
-      setAcitveLink(true);
+      dispatch(menuActif(true));
     } else {
-      setAcitveLink(false);
+      dispatch(menuActif(false));
     }
   }, [location.pathname]);
 
@@ -51,7 +55,7 @@ const Navbar = () => {
 
               <Stack direction='row' spacing={2} sx={{ display: { xs: 'none', md: 'flex', } }}>
               <NavLink to="/dashboard" style={{ textDecoration: 'none', color: '#101214' }}>
-                <StyledBoxNav bgcolor={!activeLink ? "#101214" : 'white'} color={!activeLink ? "white" : '#101214'} onClick={()=>setAcitveLink(false)}>
+                <StyledBoxNav bgcolor={!activeLink ? "#101214" : 'white'} color={!activeLink ? "white" : '#101214'} onClick={()=> dispatch(menuActif(false))}>
                   <Typography sx={{
                     fontWeight: 400,
                     fontSize: 16
@@ -62,7 +66,7 @@ const Navbar = () => {
                 </StyledBoxNav>
                 </NavLink>
                 <NavLink to="/employes" style={{ textDecoration: 'none', color: '#101214' }}>
-                <StyledBoxNav bgcolor={activeLink ? "#101214" : 'white'} color={activeLink ? "white" : '#101214'} onClick={()=>setAcitveLink(true)}>
+                <StyledBoxNav bgcolor={activeLink ? "#101214" : 'white'} color={activeLink ? "white" : '#101214'} onClick={()=> dispatch(menuActif(true))}>
                   <Typography sx={{
                     fontWeight: 400,
                     fontSize: 16

@@ -29,7 +29,7 @@ const CardDetalUser = ({icon, text, nbre}) => {
             {icon}
           </Box>
           <Typography sx={{ color: '#101214', fontSize: { xs: '15px', sm: '20px' }, fontWeight: 600 }}>{nbre}</Typography>
-          <Typography sx={{ color: '#BDBDBD', fontSize: { xs: '12px', sm: '15px' } }}>{text}</Typography>
+          <Typography sx={{ color: '#BDBDBD', fontSize: { xs: '12px', sm: '15px' } }}>{text} </Typography>
         </Stack>
       </Box>
     </>

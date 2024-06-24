@@ -3,6 +3,7 @@ import { BottomNavigation, BottomNavigationAction, Box, Paper, styled } from '@m
 import home from '../../assets/images/hom.svg';
 import dashboard from '../../assets/images/dash.svg';
 import people from '../../assets/images/people.svg';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
   '& .Mui-selected': {
@@ -16,7 +17,7 @@ const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
 }));
 const BottomTab = () => {
   const [value, setValue] = useState(0);
-
+  const navigate = useNavigate();
   const icons = [
     { src: home, label: 'Home' },
     { src: dashboard, label: 'Dashboard' },
