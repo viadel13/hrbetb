@@ -22,10 +22,10 @@ export const datasHeadUsers = {
       name: 'Adresse email',
       icone: iconeTable,
     },
-    {
-      name: 'Action',
-      icone: iconeTable,
-    },
+    // {
+    //   name: 'Action',
+    //   icone: iconeTable,
+    // },
   ],
 
 

@@ -3,11 +3,16 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { db } from '../../Firebase/firebaseConfig';
+import { useNavigate } from 'react-router-dom';
 
 const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, setSelectAll }) => {
   const location = useLocation();
   const [datasTabFilter, setDatasTabFilter] = useState([]);
   const [daysOff, setDaysOff] = useState({});
+  const [otherAbsences, setOtherAbsences] = useState({})
+  const [year, setYear] = useState(new Date().getFullYear());
+  const navigate = useNavigate();
+  const conges = 25;
 
   useEffect(() => {
     if (location.pathname === '/' || location.pathname === '/dashboard') {
@@ -20,27 +25,74 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
   useEffect(() => {
     const fetchDaysOff = async () => {
       const daysOffData = {};
+      const otherAbsencesData = {};
       for (const i of datasTab) {
-        daysOffData[i.matricule] = await fetchDocuments(i.matricule);
+        daysOffData[i.matricule] = await fetchDocuments(i.matricule, year);
+        otherAbsencesData[i.matricule] = await fetchOtherAbsencesDocuments(i.matricule, year);
       }
       setDaysOff(daysOffData);
+      setOtherAbsences(otherAbsencesData);
     };
 
     fetchDaysOff();
-  }, [datasTab]);
+  }, [datasTab, year]);
+
 
   const timestampToDate = (timestamp) => {
-    if (!timestamp) return ''; 
+    if (!timestamp) return '';
 
     const date = new Date(timestamp.seconds * 1000);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
 
     return date.toLocaleDateString('fr-FR', options);
   };
-  
-  const fetchDocuments = async (matricule) => {
+
+  const fetchDocuments = async (matricule, year) => {
     try {
-      const q = query(collection(db, 'conges'), where('matricule', '==', matricule));
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+
+      const q = query(
+        collection(db, 'conges'),
+        where('matricule', '==', matricule),
+        where('typeAbscence', '==', 'Congés payé'),
+        where('dateDebut', '>=', startOfYear),
+        where('dateDebut', '<=', endOfYear)
+      );
+
+      const querySnapshot = await getDocs(q);
+      let totalDays = 0;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateDebut = data.dateDebut.toDate();
+        const dateFin = data.dateFin.toDate();
+
+        const diffTime = Math.abs(dateFin - dateDebut);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        totalDays += diffDays;
+      });
+
+      return totalDays;
+    } catch (error) {
+      console.error('Erreur lors de la récupération des documents :', error);
+    }
+  };
+
+  const fetchOtherAbsencesDocuments = async (matricule, year) => {
+    try {
+      const startOfYear = new Date(year, 0, 1);
+      const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+
+      const q = query(
+        collection(db, 'conges'),
+        where('matricule', '==', matricule),
+        where('typeAbscence', '==', 'Autre Abscence'),
+        where('dateDebut', '>=', startOfYear),
+        where('dateDebut', '<=', endOfYear)
+      );
+
       const querySnapshot = await getDocs(q);
       let totalDays = 0;
 
@@ -82,6 +134,13 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
     setSelectAll(newSelectedRows.length === datasTabFilter.length);
   };
 
+  const handleClick = (employe) =>{
+    if( nameTab === "datasEmployes" ){
+      navigate(`/employes/${employe.matricule}`, { state: employe });
+      return
+    }
+  }
+
   return (
     <TableBody>
       {
@@ -91,11 +150,17 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
               <TableRow key={index} sx={{
                 bgcolor: selectedRows.includes(index) ? '#E0F7FA' : 'inherit',
                 backgroundColor: index >= 1 && index % 2 === 1 ? '#F9F9F9' : 'inherit',
+                '&:hover': {
+                  backgroundColor: '#E0F7FA', // Couleur de fond lorsqu'on survole la ligne
+                  cursor: 'pointer' // Curseur de souris en main
+                }
               }}
-                selected={selectedRows.includes(index)}
-                onClick={() => handleSelectRow(index)}
+            
+                // selected={selectedRows.includes(index)}
+                // onClick={() => handleSelectRow(index)}
+                onClick={() => handleClick(i)}
               >
-                {
+                {/* {
                   nameTab === "datasEmployes" || nameTab === "datasDetailUser" ? (
                     <TableCell padding="checkbox">
                       <Checkbox
@@ -104,7 +169,7 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                       />
                     </TableCell>
                   ) : ''
-                }
+                } */}
                 {
                   nameTab === "datasEmployes" ? (
                     <>
@@ -141,13 +206,13 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                       <TableCell >
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.email}</Typography>
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Stack direction="row" spacing={0.5}>
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                         </Stack>
-                      </TableCell>
+                      </TableCell> */}
                     </>
                   ) : nameTab === "datasDetailUser" ? (
                     <>
@@ -167,13 +232,13 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                       <TableCell >
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.motif}</Typography>
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Stack direction="row" spacing={0.5}>
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                           <Box sx={{ width: 5, height: 5, borderRadius: 999, backgroundColor: '#101214' }} />
                         </Stack>
-                      </TableCell>
+                      </TableCell> */}
                     </>
                   ) : (
                     <>
@@ -181,12 +246,20 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.employe}</Typography>
                       </TableCell>
                       <TableCell >
-                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>
-                          {daysOff[i.matricule] !== undefined ? daysOff[i.matricule] : 'Chargement...'}
+                        <Typography
+                          sx={{
+                            color: daysOff[i.matricule] !== undefined && daysOff[i.matricule] > 25 ? '#FF0000' : '#101214',
+                            fontWeight: 'bold',
+                            fontSize: '16px'
+                          }}
+                        >
+                          {daysOff[i.matricule] !== undefined ? `${daysOff[i.matricule]} / ${conges}` : 'Chargement...'}
                         </Typography>
                       </TableCell>
                       <TableCell >
-                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>3</Typography>
+                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>
+                          {otherAbsences[i.matricule] !== undefined ? otherAbsences[i.matricule] : 'Chargement...'}
+                        </Typography>
                       </TableCell>
                     </>
                   )

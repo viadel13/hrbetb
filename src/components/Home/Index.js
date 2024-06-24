@@ -60,6 +60,8 @@ const Home = () => {
     };
   }, [reloadConges]);
 
+
+
   const handleSelectAll = (event) => {
     if (event.target.checked) {
       setSelectedRows(datasEmployes.map((_, index) => index));
@@ -231,14 +233,14 @@ const Home = () => {
                 <Table>
                   <TableHead>
                     <TableRow sx={{ bgcolor: "#F9F9F9" }}>
-                      <TableCell padding="checkbox">
+                      {/* <TableCell padding="checkbox">
                         <Checkbox
                           indeterminate={selectedRows.length > 0 && selectedRows.length < datasEmployes.length}
                           checked={selectAll}
                           onChange={handleSelectAll}
                         />
 
-                      </TableCell>
+                      </TableCell> */}
                       {
                         datasHeadUsers.head.map((i, index) => {
                           return (

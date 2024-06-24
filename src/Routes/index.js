@@ -15,10 +15,8 @@ const Root = () => {
           <Route index path='/' element={<Home />} />
           <Route path='dashboard' element={<Home />} />
           <Route path='addConges' element={<AddConges />} />
-          <Route path='employes'  element={<Employe />} >
-            <Route  path='' element={<Employes />} />
-            <Route path='detailsEmploye' element={<DetailUser />} />
-          </Route>
+          <Route path='employes' element={<Employes />} />
+          <Route path='employes/:id' element={<DetailUser />} />
         </Route>
       </Routes>
     </Router>
