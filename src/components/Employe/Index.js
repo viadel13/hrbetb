@@ -1,4 +1,4 @@
-import { Box} from '@mui/material'
+import { Box } from '@mui/material'
 import { Outlet } from 'react-router-dom'
 
 
@@ -6,7 +6,6 @@ import { Outlet } from 'react-router-dom'
 
 const Employe = () => {
 
-  
   return (
 
     <Box
@@ -18,12 +17,14 @@ const Employe = () => {
         backgroundColor: '#F9F9F9'
       }}
     >
+
       <Box component='div' sx={{
         flexGrow: 1,
         backgroundColor: "#FFFFFF",
         mx: 2,
         borderRadius: '30px 30px 0 0'
       }}>
+
         <Outlet />
       </Box>
     </Box>

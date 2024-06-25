@@ -1,5 +1,5 @@
 import { Autocomplete, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, styled } from '@mui/material'
-import { DateField } from '@mui/x-date-pickers';
+import { DateField, DatePicker } from '@mui/x-date-pickers';
 import { addDoc, collection, onSnapshot, query, } from 'firebase/firestore';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { db } from '../../Firebase/firebaseConfig';
@@ -8,15 +8,16 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { menuActif } from '../../redux/reducers/rootReducer';
+import Loader from '../Load/Index';
 
 
 const AddConges = () => {
   const [options, setOptions] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
-  const [load, setLoad] = useState(false);
+  const [load, setLoad] = useState(true);
+  const [loadButton, setLoadButton] = useState(false);
   const [reload, setReload] = useState(false);
-  const [totalDays, setTotalDays] = useState(0);
   const dispatch = useDispatch();
 
 
@@ -50,7 +51,7 @@ const AddConges = () => {
   }));
 
   useEffect(() => {
-
+    setLoad(true);
     const q = query(collection(db, "employes"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const newDocs = {};
@@ -58,7 +59,7 @@ const AddConges = () => {
         newDocs[doc.id] = doc.data();
       });
       setOptions(Object.values(newDocs));
-
+      setLoad(false);
     });
     setReload(false);
     return () => {
@@ -91,7 +92,7 @@ const AddConges = () => {
 
     validationSchema: AddcongeSchema,
     onSubmit: async (values) => {
-      setLoad(true);
+      setLoadButton(true);
       try {
         if (values.dateDebut && values.dateFin) {
           const dateDebut = new Date(values.dateDebut);
@@ -108,7 +109,7 @@ const AddConges = () => {
               progress: undefined,
               theme: "light",
             });
-            setLoad(false);
+            setLoadButton(false);
             return;
           }
         }
@@ -130,13 +131,13 @@ const AddConges = () => {
           progress: undefined,
           theme: "light",
         });
-        setLoad(false);
+        setLoadButton(false);
         formik.handleReset();
         formik.setFieldValue('employe', null);
         setInputValue('');
         setSelectedEmployee(null);
       } catch (error) {
-        setLoad(false);
+        setLoadButton(false);
       }
 
 
@@ -161,191 +162,234 @@ const AddConges = () => {
 
 
   return (
-    <Box component='div' sx={{
-      flexGrow: 1,
-      backgroundColor: "#FFFFFF",
-      mx: 2,
-      borderRadius: '30px 30px 0 0'
-    }}>
-      <Box
-        onSubmit={formik.handleSubmit}
-        component="form"
-        noValidate
-        autoComplete="off"
-        display='flex'
-        flexDirection='column'
-        alignItems='center'
-        gap={3}
-        justifyContent='center'
-        sx={{
-          padding: '20px',
-          mb: 10
-        }}
-
-      >
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
-          <div style={{ width: '100%' }}>
-            <FormControl fullWidth>
-              <Typography>Employé</Typography>
-              <Autocomplete
-                value={selectedEmployee}
-                options={options}
-                getOptionLabel={(option) => `${option.nom} ${option.prenom}`}
-                onInputChange={(event, newInputValue) => {
-                  setInputValue(newInputValue);
-                }}
-
-                onChange={(event, newValue) => {
-                  if (newValue) {
-                    const formattedValue = `${newValue.nom} ${newValue.prenom}`;
-                    formik.setFieldValue('employe', formattedValue);
-                    formik.setFieldValue('matricule', newValue.matricule);
-                    setInputValue(formattedValue);
-                    setSelectedEmployee(newValue);
-                  } else {
-                    formik.setFieldValue('employe', null);
-                    setInputValue('');
-                    setSelectedEmployee(null);
-                  }
-                }}
-                renderInput={(params) => <TextField {...params} placeholder="Nom de l'employé" />}
-                PaperComponent={({ children }) => <CustomPaper>{children}</CustomPaper>}
-              />
-            </FormControl>
-            {
-              formik.touched.employe && formik.errors.employe && (
-                <Typography style={{ color: 'red', fontSize: '13px' }}>
-                  {formik.errors.employe}
-                </Typography>
-              )
-            }
-          </div>
-          <div style={{ width: '100%' }}>
-            <FormControl fullWidth>
-              <Typography>Types d'abscences</Typography>
-              <Select
-                value={formik.values.typeAbscence}
-                onChange={(event) => {
-                  formik.setFieldValue('typeAbscence', event.target.value);
-
-                }}
-                displayEmpty
-                renderValue={(selected) => {
-                  if (selected.length === 0) {
-                    return <em>Choisir</em>;
-                  }
-                  return selected;
-                }}
-              >
-                <MenuItem value="" disabled>
-                  <em>Choisir</em>
-                </MenuItem>
-                <MenuItem value="Congés payé">Congés payé</MenuItem>
-                <MenuItem value="Autre Abscence">Autre Abscence</MenuItem>
-              </Select>
-            </FormControl>
-            {
-              formik.touched.typeAbscence && formik.errors.typeAbscence && (
-                <Typography style={{ color: 'red', fontSize: '13px' }}>
-                  {formik.errors.typeAbscence}
-                </Typography>
-              )
-            }
-          </div>
-        </Stack>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
-          <div style={{ width: '100%' }}>
-            <FormControl fullWidth>
-              <Typography>Date de debut</Typography>
-              <DateField
-                // defaultValue={formik.values.time}
-                value={formik.values.dateDebut}
-                onChange={(date) => formik.setFieldValue('dateDebut', date)}
-                fullWidth sx={{ background: 'white' }}
-              />
-            </FormControl>
-            {
-              formik.touched.dateDebut && formik.errors.dateDebut && (
-                <Typography style={{ color: 'red', fontSize: '13px' }}>
-                  {formik.errors.dateDebut}
-                </Typography>
-              )
-            }
-          </div>
-          <div style={{ width: '100%' }}>
-            <FormControl fullWidth>
-              <Typography>Date de fin</Typography>
-              <DateField
-                value={formik.values.dateFin}
-                onChange={(date) => formik.setFieldValue('dateFin', date)}
-                fullWidth sx={{ background: 'white' }}
-              />
-            </FormControl>
-            {
-              formik.touched.dateFin && formik.errors.dateFin && (
-                <Typography style={{ color: 'red', fontSize: '13px' }}>
-                  {formik.errors.dateFin}
-                </Typography>
-              )
-            }
-          </div>
-
-        </Stack>
-
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
-          <div style={{ width: '100%' }}>
-            <Typography>Motif</Typography>
-            <TextField
-              // disabled={formik.values.typeAbscence === "Congés payé" ? true : false}
-              InputProps={{
-                readOnly: formik.values.typeAbscence === "Congés payé" ? true : false
-              }}
-              fullWidth
-              sx={{
-                backgroundColor: 'white',
-                '& .Mui-disabled': {
-                  backgroundColor: '#f0f0f0',
-                  color: '#a0a0a0',
-                },
-              }}
-              type='text'
-              name="motif"
-              id='motif'
-              value={formik.values.motif}
-              onChange={(e) => formik.setFieldValue('motif', e.target.value)}
-              placeholder="Motif"
-            />
-            {
-              formik.touched.motif && formik.errors.motif && (
-                <Typography style={{ color: 'red', fontSize: '13px' }}>
-                  {formik.errors.motif}
-                </Typography>
-              )
-            }
-          </div>
-          <div style={{ width: '100%' }}></div>
-        </Stack>
-        <>
-          <Button
-            variant='contained'
-            disableElevation
-            disabled={load}
-            type='submit'
+    <>
+      <Box sx={{
+        px: 3,
+        pt: 5,
+      }}>
+        <Stack gap={1}>
+          <Typography
             sx={{
-              backgroundColor: '#ce1212',
-              padding: '8px 20px',
-              '&:hover': {
-                backgroundColor: '#ce1212',
-              }
+              fontSize: 16,
+              color: '#BDBDBD'
             }}
           >
-            {
-              !load ? 'Enregistrer' : <CircularProgress sx={{ color: 'white' }} size={30} />
-            }
-          </Button>
-        </>
+            Employe
+          </Typography>
+          <Stack direction="row" gap={1} alignItems='center'>
+            <Box sx={{
+              backgroundColor: '#FF3F25',
+              width: 6,
+              height: 24,
+              borderRadius: 12
+            }}>
+
+            </Box>
+            <Typography
+              sx={{
+                fontSize: 24,
+                color: '#101214',
+                fontWeight: 600
+              }}
+            >
+              Ajouter un conge
+            </Typography>
+
+          </Stack>
+        </Stack>
       </Box>
-    </Box>
+      <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />
+      {
+        load ? <Loader /> : (
+          <Box sx={{
+            px: 3,
+          }}>
+            <Box
+              onSubmit={formik.handleSubmit}
+              component="form"
+              noValidate
+              autoComplete="off"
+              display='flex'
+              flexDirection='column'
+              alignItems='center'
+              gap={3}
+              justifyContent='center'
+
+            >
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
+                <div style={{ width: '100%' }}>
+                  <FormControl fullWidth>
+                    <Typography>Employé</Typography>
+                    <Autocomplete
+                      value={selectedEmployee}
+                      options={options}
+                      getOptionLabel={(option) => `${option.nom} ${option.prenom}`}
+                      onInputChange={(event, newInputValue) => {
+                        setInputValue(newInputValue);
+                      }}
+
+                      onChange={(event, newValue) => {
+                        if (newValue) {
+                          const formattedValue = `${newValue.nom} ${newValue.prenom}`;
+                          formik.setFieldValue('employe', formattedValue);
+                          formik.setFieldValue('matricule', newValue.matricule);
+                          setInputValue(formattedValue);
+                          setSelectedEmployee(newValue);
+                        } else {
+                          formik.setFieldValue('employe', null);
+                          setInputValue('');
+                          setSelectedEmployee(null);
+                        }
+                      }}
+                      renderInput={(params) => <TextField {...params} placeholder="Nom de l'employé" />}
+                      PaperComponent={({ children }) => <CustomPaper>{children}</CustomPaper>}
+                    />
+                  </FormControl>
+                  {
+                    formik.touched.employe && formik.errors.employe && (
+                      <Typography style={{ color: 'red', fontSize: '13px' }}>
+                        {formik.errors.employe}
+                      </Typography>
+                    )
+                  }
+                </div>
+                <div style={{ width: '100%' }}>
+                  <FormControl fullWidth>
+                    <Typography>Types d'abscences</Typography>
+                    <Select
+                      value={formik.values.typeAbscence}
+                      onChange={(event) => {
+                        formik.setFieldValue('typeAbscence', event.target.value);
+
+                      }}
+                      displayEmpty
+                      renderValue={(selected) => {
+                        if (selected.length === 0) {
+                          return <em>Choisir</em>;
+                        }
+                        return selected;
+                      }}
+                    >
+                      <MenuItem value="" disabled>
+                        <em>Choisir</em>
+                      </MenuItem>
+                      <MenuItem value="Congés payé">Congés payé</MenuItem>
+                      <MenuItem value="Autre Abscence">Autre Abscence</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {
+                    formik.touched.typeAbscence && formik.errors.typeAbscence && (
+                      <Typography style={{ color: 'red', fontSize: '13px' }}>
+                        {formik.errors.typeAbscence}
+                      </Typography>
+                    )
+                  }
+                </div>
+              </Stack>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
+                <div style={{ width: '100%' }}>
+                  <FormControl fullWidth>
+                    <Typography>Date de debut</Typography>
+                    {/* <DateField
+                      // defaultValue={formik.values.time}
+                      value={formik.values.dateDebut}
+                      onChange={(date) => formik.setFieldValue('dateDebut', date)}
+                      fullWidth sx={{ background: 'white' }}
+                    /> */}
+                    <DatePicker
+                      value={formik.values.dateDebut}
+                      onChange={(date) => formik.setFieldValue('dateDebut', date)}
+                    />
+                  </FormControl>
+                  {
+                    formik.touched.dateDebut && formik.errors.dateDebut && (
+                      <Typography style={{ color: 'red', fontSize: '13px' }}>
+                        {formik.errors.dateDebut}
+                      </Typography>
+                    )
+                  }
+                </div>
+                <div style={{ width: '100%' }}>
+                  <FormControl fullWidth>
+                    <Typography>Date de fin</Typography>
+                    {/* <DateField
+                      value={formik.values.dateFin}
+                      onChange={(date) => formik.setFieldValue('dateFin', date)}
+                      fullWidth sx={{ background: 'white' }}
+                    /> */}
+                    <DatePicker
+                      value={formik.values.dateFin}
+                      onChange={(date) => formik.setFieldValue('dateFin', date)}
+                    />
+                  </FormControl>
+                  {
+                    formik.touched.dateFin && formik.errors.dateFin && (
+                      <Typography style={{ color: 'red', fontSize: '13px' }}>
+                        {formik.errors.dateFin}
+                      </Typography>
+                    )
+                  }
+                </div>
+
+              </Stack>
+
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
+                <div style={{ width: '100%' }}>
+                  <Typography>Motif</Typography>
+                  <TextField
+                    // disabled={formik.values.typeAbscence === "Congés payé" ? true : false}
+                    InputProps={{
+                      readOnly: formik.values.typeAbscence === "Congés payé" ? true : false
+                    }}
+                    fullWidth
+                    sx={{
+                      backgroundColor: 'white',
+                      '& .Mui-disabled': {
+                        backgroundColor: '#f0f0f0',
+                        color: '#a0a0a0',
+                      },
+                    }}
+                    type='text'
+                    name="motif"
+                    id='motif'
+                    value={formik.values.motif}
+                    onChange={(e) => formik.setFieldValue('motif', e.target.value)}
+                    placeholder="Motif"
+                  />
+                  {
+                    formik.touched.motif && formik.errors.motif && (
+                      <Typography style={{ color: 'red', fontSize: '13px' }}>
+                        {formik.errors.motif}
+                      </Typography>
+                    )
+                  }
+                </div>
+                <div style={{ width: '100%' }}></div>
+              </Stack>
+              <>
+                <Button
+                  variant='contained'
+                  disableElevation
+                  disabled={loadButton}
+                  type='submit'
+                  sx={{
+                    backgroundColor: '#ce1212',
+                    padding: '8px 20px',
+                    '&:hover': {
+                      backgroundColor: '#ce1212',
+                    }
+                  }}
+                >
+                  {
+                    !loadButton ? 'Enregistrer' : <CircularProgress sx={{ color: 'white' }} size={30} />
+                  }
+                </Button>
+              </>
+            </Box>
+          </Box>
+        )
+      }
+    </>
   )
 }
 
