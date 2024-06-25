@@ -1,6 +1,4 @@
 import { AppBar, Box, IconButton, Stack, Toolbar, Typography, styled } from '@mui/material';
-import search from '../../assets/images/search.svg';
-import notif from '../../assets/images/notif.svg';
 import user from '../../assets/images/user.svg';
 import logo from '../../assets/images/logo.svg';
 import hambuger from '../../assets/images/hambuger.svg';
@@ -8,27 +6,25 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useLayoutEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { menuActif } from '../../redux/reducers/rootReducer';
+import { Icon } from '@iconify/react';
 
 
 const Navbar = () => {
-
-  // const[activeLink, setAcitveLink] = useState(false);
   const location = useLocation();
   const activeLink = useSelector(state => state.betbhr.activeLink)
   const dispatch = useDispatch();
 
 
   useLayoutEffect(() => {
-    // Check the current pathname and set activeLink accordingly
     if (location.pathname === '/employes') {
       dispatch(menuActif(true));
     } else {
       dispatch(menuActif(false));
     }
-  }, [location.pathname]);
+  }, [location.pathname, dispatch]);
 
   const StyledBoxNav = styled(IconButton)(({ theme, bgcolor, color }) => ({
-    backgroundColor:  bgcolor,
+    backgroundColor: bgcolor,
     width: '120px',
     height: '45px',
     borderRadius: '24px',
@@ -49,31 +45,29 @@ const Navbar = () => {
         <Toolbar sx={{ backgroundColor: '#F9F9F9', height: 90, mx: 2, display: 'flex', alignItems: 'center' }}>
           <Box display="flex" alignItems="center" gap={2} sx={{ flexGrow: 1 }}>
             <Stack direction="row" spacing={10} alignItems="center">
-
-              <img src={logo} alt='logo' />
-
-
+              <NavLink to="/dashboard" style={{  color: '#101214' }}>
+                <img src={logo} alt='logo' />
+              </NavLink>
               <Stack direction='row' spacing={2} sx={{ display: { xs: 'none', md: 'flex', } }}>
-              <NavLink to="/dashboard" style={{ textDecoration: 'none', color: '#101214' }}>
-                <StyledBoxNav bgcolor={!activeLink ? "#101214" : 'white'} color={!activeLink ? "white" : '#101214'} onClick={()=> dispatch(menuActif(false))}>
-                  <Typography sx={{
-                    fontWeight: 400,
-                    fontSize: 16
-                  }}>
-
-                    Dashboard
-                  </Typography>
-                </StyledBoxNav>
+                <NavLink to="/dashboard" style={{ textDecoration: 'none', color: '#101214' }}>
+                  <StyledBoxNav bgcolor={!activeLink ? "#101214" : 'white'} color={!activeLink ? "white" : '#101214'} onClick={() => dispatch(menuActif(false))}>
+                    <Typography sx={{
+                      fontWeight: 400,
+                      fontSize: 16
+                    }}>
+                      Dashboard
+                    </Typography>
+                  </StyledBoxNav>
                 </NavLink>
                 <NavLink to="/employes" style={{ textDecoration: 'none', color: '#101214' }}>
-                <StyledBoxNav bgcolor={activeLink ? "#101214" : 'white'} color={activeLink ? "white" : '#101214'} onClick={()=> dispatch(menuActif(true))}>
-                  <Typography sx={{
-                    fontWeight: 400,
-                    fontSize: 16
-                  }}>
+                  <StyledBoxNav bgcolor={activeLink ? "#101214" : 'white'} color={activeLink ? "white" : '#101214'} onClick={() => dispatch(menuActif(true))}>
+                    <Typography sx={{
+                      fontWeight: 400,
+                      fontSize: 16
+                    }}>
                       Employés
-                  </Typography>
-                </StyledBoxNav>
+                    </Typography>
+                  </StyledBoxNav>
                 </NavLink>
               </Stack>
 
@@ -88,7 +82,7 @@ const Navbar = () => {
                 backgroundColor: 'white'
               }}>
 
-                <img src={search} width={20} height={20} alt='search' />
+                <Icon icon="ep:search" color='#101214' fontSize={20} />
 
               </IconButton>
               <IconButton sx={{
@@ -97,7 +91,7 @@ const Navbar = () => {
                 borderRadius: '100%',
                 backgroundColor: 'white'
               }}>
-                <img src={notif} width={20} height={20} alt='notif' />
+                <Icon icon="hugeicons:notification-03" color='#101214' fontSize={20} />
               </IconButton>
             </Stack>
             <Stack direction='row' spacing={2}>
@@ -116,7 +110,7 @@ const Navbar = () => {
                   fontWeight: 600,
                 }}
               >
-                Betbsarl
+                BETB SARL
                 <Typography
                   sx={{
                     color: '#101214',

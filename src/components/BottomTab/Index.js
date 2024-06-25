@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BottomNavigation, BottomNavigationAction, Box, Paper, styled } from '@mui/material';
 import home from '../../assets/images/hom.svg';
 import dashboard from '../../assets/images/dash.svg';
@@ -19,10 +19,21 @@ const BottomTab = () => {
   const [value, setValue] = useState(0);
   const navigate = useNavigate();
   const icons = [
-    { src: home, label: 'Home' },
     { src: dashboard, label: 'Dashboard' },
-    { src: people, label: 'Employes' }
+    { src: people, label: 'Employes' },
+    { src: home, label: 'Conges' },
   ];
+
+  // useEffect(()=>{
+  //   if(value === 0){
+  //     navigate(`/dashboard`);
+  //   }else if(value === 1){
+  //     navigate(`/employes`);
+  //   }else{
+  //     navigate(`/conges`);
+  //   }
+  // }, [value, navigate])
+
   return (
     <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: { xs: 'flex', md: 'none'} }} elevation={2}>
     <StyledBottomNavigation

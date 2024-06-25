@@ -1,26 +1,28 @@
-import { Box, Stack, Typography, styled, Select, MenuItem, Grid, TableContainer, Table, TableHead, TableRow, TableCell, Checkbox } from '@mui/material'
+import { Box, Stack, Typography, styled, Select, MenuItem, Grid, TableContainer, Table, TableHead, TableRow, TableCell, Checkbox, CircularProgress } from '@mui/material'
 import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Card from '../Card/Index';
 import { datasCard } from '../../datas/datasCard';
-import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../Firebase/firebaseConfig';
 import { datasDetailHead } from '../../datas/datasDetailHead';
 import TableEmployment from '../TableEmployment/Index';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { menuActif } from '../../redux/reducers/rootReducer';
-
+import Loader from '../Load/Index';
+import { Icon } from '@iconify/react';
 
 
 const DetailUser = () => {
-  const [load, setLoad] = useState(false);
+  const [load, setLoad] = useState(true);
   const currentYear = new Date().getFullYear();
   const [selectDate, setSelectDate] = useState(currentYear);
   const [reload, setReload] = useState(false);
   const [datasDetailUser, setDatasDetailUser] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const params = useParams();
+  const[nbreConges, setNbreConges] = useState('');
+  const[nbreAbscence, setNbreAbscence] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state;
@@ -65,13 +67,14 @@ const DetailUser = () => {
       navigate('/employes');
     }
   }, [state, navigate]);
-
+ 
+  //recupere les documents
   useEffect(() => {
     const fetchDetailUser = async () => {
       setLoad(true);
 
-      const startOfYear = new Date(selectDate, 0, 1); // Premier jour de l'année
-      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59); // Dernière seconde de l'année
+      const startOfYear = new Date(selectDate, 0, 1);
+      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59); 
 
       const q = query(
         collection(db, 'conges'),
@@ -89,11 +92,88 @@ const DetailUser = () => {
         setLoad(false);
       });
 
-      return unsubscribe;
+      setReload(false);
+      return () => {
+        unsubscribe();
+      };
     };
 
     fetchDetailUser();
-  }, [load, selectDate]);
+  }, [setReload, selectDate]);
+
+  
+  useEffect(()=>{
+    fetchDocuments()
+    fetchOtherAbsencesDocuments()
+  }, [selectDate])
+
+
+  
+  const fetchDocuments = async () => {
+    try {
+      const startOfYear = new Date(selectDate, 0, 1);
+      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59);
+
+      const q = query(
+        collection(db, 'conges'),
+        where('matricule', '==', state.matricule),
+        where('typeAbscence', '==', 'Congés payé'),
+        where('dateDebut', '>=', startOfYear),
+        where('dateDebut', '<=', endOfYear)
+      );
+
+      const querySnapshot = await getDocs(q);
+      let totalDays = 0;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateDebut = data.dateDebut.toDate();
+        const dateFin = data.dateFin.toDate();
+
+        const diffTime = Math.abs(dateFin - dateDebut);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        totalDays += diffDays;
+      });
+      totalDays ? setNbreConges(totalDays) : setNbreConges(0)
+
+    } catch (error) {
+      console.error('Erreur lors de la récupération des documents :', error);
+    }
+  };
+  
+  const fetchOtherAbsencesDocuments = async () => {
+    try {
+      const startOfYear = new Date(selectDate, 0, 1);
+      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59);
+
+      const q = query(
+        collection(db, 'conges'),
+        where('matricule', '==', state.matricule),
+        where('typeAbscence', '==', 'Autre Abscence'),
+        where('dateDebut', '>=', startOfYear),
+        where('dateDebut', '<=', endOfYear)
+      );
+
+      const querySnapshot = await getDocs(q);
+      let totalDays = 0;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const dateDebut = data.dateDebut.toDate();
+        const dateFin = data.dateFin.toDate();
+
+        const diffTime = Math.abs(dateFin - dateDebut);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        totalDays += diffDays;
+      });
+
+      totalDays ? setNbreAbscence(totalDays) : setNbreAbscence(0)
+    } catch (error) {
+      console.error('Erreur lors de la récupération des documents :', error);
+    }
+  };
 
 
   const handleSelectAll = (event) => {
@@ -122,122 +202,101 @@ const DetailUser = () => {
         mx: 2,
         borderRadius: '30px 30px 0 0'
       }}>
-        {
-          !state ? (<p>Chargement...</p>) : (
-            <>
+        <>
+          <Box sx={{
+            px: 3,
+            pt: 5,
+          }}>
 
-              <Box sx={{
-                px: 3,
-                pt: 5,
+            <Stack spacing={1}>
+              <Typography
+                sx={{
+                  fontSize: 16,
+                  color: '#BDBDBD'
+                }}
+              >
+                Employes <span></span>
+                <Typography
+                  component='span'
+                  sx={{
+                    fontSize: 16,
+                    color: '#101214'
+                  }}
+                >
+                  / DetailsEmployé
+                </Typography>
+              </Typography>
+              <Stack direction="row" spacing={2} alignItems='center' flex={1} justifyContent='space-between'>
+                <Stack direction="row" spacing={1} alignItems='center'>
+                  <Box sx={{
+                    backgroundColor: '#FF3F25',
+                    width: 6,
+                    height: 24,
+                    borderRadius: 12
+                  }}>
 
-              }}>
-
-                <Stack spacing={1}>
+                  </Box>
                   <Typography
                     sx={{
-                      fontSize: 16,
-                      color: '#BDBDBD'
+                      fontSize: { xs: 17, sm: 24 },
+                      color: '#101214',
+                      fontWeight: 600
                     }}
                   >
-                    Employes <span></span>
-                    <Typography
-                      component='span'
-                      sx={{
-                        fontSize: 16,
-                        color: '#101214'
-                      }}
-                    >
-                      / DetailsEmployé
-                    </Typography>
+                    Informations sur l’employé
                   </Typography>
-                  <Stack direction="row" spacing={2} alignItems='center' flex={1} justifyContent='space-between'>
-                    <Stack direction="row" spacing={1} alignItems='center'>
-                      <Box sx={{
-                        backgroundColor: '#FF3F25',
-                        width: 6,
-                        height: 24,
-                        borderRadius: 12
-                      }}>
-
-                      </Box>
-                      <Typography
-                        sx={{
-                          fontSize: { xs: 17, sm: 24 },
-                          color: '#101214',
-                          fontWeight: 600
-                        }}
-                      >
-                        Informations sur l’employé
-                      </Typography>
-                    </Stack>
-
-                    <StyledSelect
-                      displayEmpty
-                      inputProps={{ 'aria-label': 'Without label' }}
-                      size='small'
-                      value={selectDate}
-                      onChange={(event) => {
-                        setSelectDate(event.target.value);
-                      }}
-                      MenuProps={{
-                        PaperProps: {
-                          style: {
-                            boxShadow: '0px 1px 3px 0px #BDBDBD',
-                            border: '1px solid #E0E0E0',
-                          },
-                        },
-                      }}
-                    >
-
-                      {years.map((year) => (
-                        <MenuItem key={year} value={year} sx={{ color: '#101214' }}>
-                          {year}
-                        </MenuItem>
-                      ))}
-                    </StyledSelect>
-                  </Stack>
                 </Stack>
 
-              </Box>
+                <StyledSelect
+                  displayEmpty
+                  inputProps={{ 'aria-label': 'Without label' }}
+                  size='small'
+                  value={selectDate}
+                  onChange={(event) => {
+                    setSelectDate(event.target.value);
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        boxShadow: '0px 1px 3px 0px #BDBDBD',
+                        border: '1px solid #E0E0E0',
+                      },
+                    },
+                  }}
+                >
 
-              <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />
+                  {years.map((year) => (
+                    <MenuItem key={year} value={year} sx={{ color: '#101214' }}>
+                      {year}
+                    </MenuItem>
+                  ))}
+                </StyledSelect>
+              </Stack>
+            </Stack>
 
-              <Box sx={{
-                px: 3,
-              }}>
+          </Box>
 
-                <Grid container rowSpacing={3} columnSpacing={2} mb={5} >
-                  <Grid item xs={12} sm={6} md={4} >
-                    <Stack direction='row' spacing={2}>
-                      <Box sx={{
-                        width: '90px',
-                        height: '90px',
-                        borderRadius: 999,
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                      }}>
-                        <img src='https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?q=80&w=2076&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='img' style={{ objectFit: 'cover', width: '100%', height: '100%', borderRadius: 999, }} />
-                      </Box>
-                      <Stack sx={{ justifyContent: 'space-between', display: { xs: 'none', sm: 'flex', md: 'flex' } }}>
-                        <Typography sx={{ fontSize: '18px', color: '#101214', fontWeight: 'bold' }}>{state.nom}</Typography>
-                        <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Poste
+          <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />
+          {
+            load ? <Loader /> : (
+              <>
+                <Box sx={{
+                  px: 3,
+                }}>
 
-                          <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.poste}</Typography>
-                        </Typography>
-
-                      </Stack>
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={8} sx={{}} >
-                    <Box sx={{ display: 'flex', height: '100%', }}>
-
-                      <Stack
-                        sx={{
-                          flexDirection: { xs: 'column', sm: 'column', md: 'row' },
-                          alignItems: { xs: 'flex-start', sm: 'flex-start', md: 'flex-end' },
-                          gap: { xs: 2, sm: 0, md: 10 }
-                        }} >
-                        <Stack sx={{ justifyContent: 'space-between', display: { xs: 'flex', sm: 'none', md: 'none' } }}>
+                  <Grid container rowSpacing={3} columnSpacing={2} mb={5} >
+                    <Grid item xs={12} sm={6} md={4} >
+                      <Stack direction='row' spacing={2}>
+                        <Box sx={{
+                          width: '90px',
+                          height: '90px',
+                          borderRadius: 999,
+                          justifyContent: 'center',
+                          alignItems: 'center'
+                        }}>
+                          <img src='https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?q=80&w=2076&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='img' style={{ objectFit: 'cover', width: '100%', height: '100%', borderRadius: 999, }} />
+                        </Box>
+                        <Stack sx={{ justifyContent: 'space-between', display: { xs: 'none', sm: 'flex', md: 'flex' } }}>
                           <Typography sx={{ fontSize: '18px', color: '#101214', fontWeight: 'bold' }}>{state.nom}</Typography>
                           <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Poste
 
@@ -245,90 +304,138 @@ const DetailUser = () => {
                           </Typography>
 
                         </Stack>
-                        <Stack>
-                          <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Téléphone</Typography>
-                          <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.telephone}</Typography>
-                        </Stack>
-                        <Stack>
-                          <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Adresse email</Typography>
-                          <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.email}</Typography>
-                        </Stack>
-
                       </Stack>
-                    </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={8} sx={{}} >
+                      <Box sx={{ display: 'flex', height: '100%', }}>
+
+                        <Stack
+                          sx={{
+                            flexDirection: { xs: 'column', sm: 'column', md: 'row' },
+                            alignItems: { xs: 'flex-start', sm: 'flex-start', md: 'flex-end' },
+                            gap: { xs: 2, sm: 0, md: 10 }
+                          }} >
+                          <Stack sx={{ justifyContent: 'space-between', display: { xs: 'flex', sm: 'none', md: 'none' } }}>
+                            <Typography sx={{ fontSize: '18px', color: '#101214', fontWeight: 'bold' }}>{state.nom}</Typography>
+                            <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Poste
+
+                              <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.poste}</Typography>
+                            </Typography>
+
+                          </Stack>
+                          <Stack>
+                            <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Téléphone</Typography>
+                            <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.telephone}</Typography>
+                          </Stack>
+                          <Stack>
+                            <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Adresse email</Typography>
+                            <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.email}</Typography>
+                          </Stack>
+
+                        </Stack>
+                      </Box>
+                    </Grid>
+                    {/* 
+                    {
+                      datasCard.map((i, index) => {
+                        return (
+                          <Fragment key={index}>
+                            <Grid item xs={12} sm={6} md={3} sx={{}}>
+                              <Card
+                                icon={i.icone}
+                                name={state.departement}
+                                downName={i.downName}
+                              />
+                            </Grid>
+                          </Fragment>
+                        )
+                      })
+                    } */}
+                    <Grid item xs={12} sm={6} md={3} >
+                      <Card
+                        icon={<Icon icon="mdi:microsoft-office" fontSize={25} />}
+                        name={state.departement}
+                        downName="Département"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3} >
+                      <Card
+                        icon={<Icon icon="solar:calendar-linear" fontSize={25} />}
+                        name={ nbreConges !== '' ?  `${nbreConges}` : <CircularProgress size={18} sx={{color: 'white',}} /> }
+                        downName="Congés Pris"
+                        maxConges={25}
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3} >
+                      <Card
+                        icon={<Icon icon="solar:logout-outline" fontSize={25} />}
+                        name={nbreAbscence !== '' ?  `${nbreAbscence}` : <CircularProgress size={18} sx={{color: 'white',}} />}
+                        downName="Autres abscences"
+                      />
+                    </Grid>
+                    <Grid item xs={12} sm={6} md={3} >
+                      <Card
+                        icon={<Icon icon="majesticons:award-line" fontSize={25} />}
+                        name="Observation"
+                        downName="Comportement"
+                      />
+                    </Grid>
+
                   </Grid>
 
-                  {
-                    datasCard.map((i, index) => {
-                      return (
-                        <Fragment key={index}>
-                          <Grid item xs={12} sm={6} md={3} sx={{}}>
-                            <Card
-                              icon={i.icone}
-                              name={i.name}
-                              downName={i.downName}
-                            />
-                          </Grid>
-                        </Fragment>
-                      )
-                    })
-                  }
+                </Box>
 
+                <Box sx={{
+                  px: 3,
+                  mb: 12,
+                }}>
+                  <TableContainer sx={{ minWidth: '100%', mt: 2, whiteSpace: 'nowrap', overflowX: 'auto', '&::-webkit-scrollbar': { height: '8px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: '#FF3F25', borderRadius: '8px' }, '&::-webkit-scrollbar-thumb:hover': { backgroundColor: '#FF5733' }, '&::-webkit-scrollbar-track': { backgroundColor: '#F0F0F0', borderRadius: '8px' } }}>
+                    <Table>
+                      <TableHead>
+                        <TableRow sx={{ bgcolor: "#F9F9F9" }}>
+                          {/* <TableCell padding="checkbox">
+                              <Checkbox
+                                indeterminate={selectedRows.length > 0 && selectedRows.length < datasDetailUser.length}
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                              />
+                            </TableCell> 
+                        */}
+                          {
 
-                </Grid>
+                            datasDetailHead.head.map((i, index) => {
+                              return (
+                                <TableCell key={index}>
+                                  <Stack direction='row' alignItems="center" spacing={2}>
+                                    <Typography sx={{ color: '#101214', fontWeight: "bold" }}>{i.name}</Typography>
+                                    <img src={i.icone} alt={i.name} width={6} height={10} />
+                                  </Stack>
+                                </TableCell>
+                              )
+                            })
 
-              </Box>
-              <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />
-              <Box sx={{
-                px: 3,
-                mb: 12,
-              }}>
-                <TableContainer sx={{ minWidth: '100%', mt: 2, whiteSpace: 'nowrap', overflowX: 'auto', '&::-webkit-scrollbar': { height: '8px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: '#FF3F25', borderRadius: '8px' }, '&::-webkit-scrollbar-thumb:hover': { backgroundColor: '#FF5733' }, '&::-webkit-scrollbar-track': { backgroundColor: '#F0F0F0', borderRadius: '8px' } }}>
-                  <Table>
-                    <TableHead>
-                      <TableRow sx={{ bgcolor: "#F9F9F9" }}>
-                        {/* <TableCell padding="checkbox">
-      <Checkbox
-        indeterminate={selectedRows.length > 0 && selectedRows.length < datasDetailUser.length}
-        checked={selectAll}
-        onChange={handleSelectAll}
-      />
+                          }
+                        </TableRow>
 
-    </TableCell> */}
-                        {
+                      </TableHead>
+                      {datasDetailUser.length > 0 && (
+                        <TableEmployment
+                          datasTab={datasDetailUser}
+                          nameTab="datasDetailUser"
+                          selectedRows={selectedRows}
+                          setSelectedRows={setSelectedRows}
+                          setSelectAll={setSelectAll}
+                        />
+                      )}
+                    </Table>
+                  </TableContainer>
 
-                          datasDetailHead.head.map((i, index) => {
-                            return (
-                              <TableCell key={index}>
-                                <Stack direction='row' alignItems="center" spacing={2}>
-                                  <Typography sx={{ color: '#101214', fontWeight: "bold" }}>{i.name}</Typography>
-                                  <img src={i.icone} alt={i.name} width={6} height={10} />
-                                </Stack>
-                              </TableCell>
-                            )
-                          })
+                </Box>
+              </>
+            )
+          }
 
-                        }
-                      </TableRow>
-
-                    </TableHead>
-                    {datasDetailUser.length > 0 && (
-                      <TableEmployment
-                        datasTab={datasDetailUser}
-                        nameTab="datasDetailUser"
-                        selectedRows={selectedRows}
-                        setSelectedRows={setSelectedRows}
-                        setSelectAll={setSelectAll}
-                      />
-                    )}
-                  </Table>
-                </TableContainer>
-
-              </Box>
-            </>
-
-          )
-        }
+        </>
       </Box>
     </Box>
 

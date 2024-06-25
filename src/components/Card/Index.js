@@ -1,6 +1,6 @@
 import { Box, Stack, Typography } from '@mui/material'
 
-const Card = ({ icon, name, downName }) => {
+const Card = ({ icon, name, downName, maxConges }) => {
   return (
     <>
       <>
@@ -27,8 +27,8 @@ const Card = ({ icon, name, downName }) => {
               }}>
                 {icon}
               </Box>
-              <Typography sx={{fontWeight: 'bold', fontSize: '18px', color: 'white'}}>
-                {name}
+              <Typography sx={{fontWeight: 'bold', fontSize: '18px', color: maxConges ? name > 25 ? '#FF0000' : 'white' : 'white'}}>
+                {name}{maxConges ? ` / ${maxConges}`: ''}
                 <Typography sx={{fontWeight: 'bold', fontSize: '14px', color: '#BDBDBD'}}>
                 {downName}
               </Typography>

@@ -5,6 +5,7 @@ import Content from "../components/Content/Index";
 import DetailUser from "../components/DetailUser/Index";
 import Employes from "../components/Employes/Index";
 import AddConges from "../components/AddConges/Index";
+import Conges from "../components/Conges/Index";
 
 
 const Root = () => {
@@ -19,6 +20,7 @@ const Root = () => {
             <Route path='addConges' element={<AddConges />} />
           </Route>
           <Route path='employes/:id' element={<DetailUser />} />
+          <Route path='conges' element={<Conges />} />
         </Route>
       </Routes>
     </Router>

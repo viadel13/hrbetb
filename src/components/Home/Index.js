@@ -1,9 +1,6 @@
 import { Box, Checkbox, Grid, Stack, Table, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
-// import TableEmployment from '../TableEmployment/Index';
-import { datasConges, datasCongesHead } from '../../datas/datasCongesHead';
-// import Horaire from '../Horaire/Index';
-// import CardDetalUser from '../CardDetalUser/Index';
+import { datasCongesHead } from '../../datas/datasCongesHead';
 import { Icon } from '@iconify/react';
 import { useSelector } from 'react-redux';
 import { Suspense, lazy, useEffect, useState } from 'react';

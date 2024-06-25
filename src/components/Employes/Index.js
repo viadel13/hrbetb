@@ -170,6 +170,7 @@ const Employes = () => {
       <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />
       <Box sx={{
         px: 3,
+        mb: 10
       }}>
         {
           load ? <Loader /> : (

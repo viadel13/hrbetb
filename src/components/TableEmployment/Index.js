@@ -134,8 +134,8 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
     setSelectAll(newSelectedRows.length === datasTabFilter.length);
   };
 
-  const handleClick = (employe) =>{
-    if( nameTab === "datasEmployes" ){
+  const handleClick = (employe) => {
+    if (nameTab === "datasEmployes") {
       navigate(`/employes/${employe.matricule}`, { state: employe });
       return
     }
@@ -155,7 +155,7 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                   cursor: 'pointer' // Curseur de souris en main
                 }
               }}
-            
+
                 // selected={selectedRows.includes(index)}
                 // onClick={() => handleSelectRow(index)}
                 onClick={() => handleClick(i)}
@@ -173,6 +173,9 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                 {
                   nameTab === "datasEmployes" ? (
                     <>
+                      <TableCell >
+                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.matricule}</Typography>
+                      </TableCell>
                       <TableCell>
                         <Stack direction="row" alignItems="center" spacing={2}>
                           <Box
@@ -189,7 +192,7 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                           </Box>
                           <Box sx={{ border: '1px solid #E6E6E6', height: '26px' }} />
                           <Stack>
-                            <Typography sx={{ color: '#101214', fontSize: '16px', fontWeight: 'bold' }}>{i.nom}</Typography>
+                            <Typography sx={{ color: '#101214', fontSize: '16px', fontWeight: 'bold' }}>{i.nom} {i.prenom}</Typography>
                             <Typography sx={{ color: '#BDBDBD', fontSize: '14px', fontWeight: 'bold' }}>{i.poste}</Typography>
                           </Stack>
                         </Stack>
@@ -197,9 +200,7 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                       <TableCell >
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.dateDebut}</Typography>
                       </TableCell>
-                      <TableCell >
-                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.matricule}</Typography>
-                      </TableCell>
+
                       <TableCell >
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.telephone}</Typography>
                       </TableCell>

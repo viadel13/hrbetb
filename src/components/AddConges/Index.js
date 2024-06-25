@@ -1,6 +1,6 @@
 import { Autocomplete, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, styled } from '@mui/material'
 import { DateField, DatePicker } from '@mui/x-date-pickers';
-import { addDoc, collection, onSnapshot, query, } from 'firebase/firestore';
+import { addDoc, collection, getDocs, onSnapshot, query, where, } from 'firebase/firestore';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { db } from '../../Firebase/firebaseConfig';
 import { useFormik } from "formik";
@@ -93,12 +93,11 @@ const AddConges = () => {
     validationSchema: AddcongeSchema,
     onSubmit: async (values) => {
       setLoadButton(true);
+      const dateDebut = new Date(values.dateDebut);
+      const dateFin = new Date(values.dateFin);
       try {
         if (values.dateDebut && values.dateFin) {
-          const dateDebut = new Date(values.dateDebut);
-          const dateFin = new Date(values.dateFin);
-
-          if (dateFin < dateDebut) {
+          if (dateFin <= dateDebut) {
             toast.error("Erreur sur la date", {
               position: "top-right",
               autoClose: 5000,
@@ -113,6 +112,41 @@ const AddConges = () => {
             return;
           }
         }
+
+        // Récupérer les congés existants pour l'employé
+        const q = query(collection(db, "conges"), where("matricule", "==", values.matricule));
+        const querySnapshot = await getDocs(q);
+        let conflictFound = false;
+        querySnapshot.forEach((doc) => {
+          const existingConge = doc.data();
+          const existingDateDebut = existingConge.dateDebut.toDate();
+          const existingDateFin = existingConge.dateFin.toDate();
+
+          // Vérifiez l'intersection des dates
+          if (
+            (dateDebut >= existingDateDebut && dateDebut <= existingDateFin) ||
+            (dateFin >= existingDateDebut && dateFin <= existingDateFin) ||
+            (existingDateDebut >= dateDebut && existingDateDebut <= dateFin)
+          ) {
+            conflictFound = true;
+          }
+        });
+
+        if (conflictFound) {
+          toast.error("congé existant", {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          });
+          setLoadButton(false);
+          return;
+        }
+
         await addDoc(collection(db, "conges"), {
           matricule: values.matricule,
           employe: values.employe,
@@ -121,7 +155,7 @@ const AddConges = () => {
           dateFin: new Date(values.dateFin),
           motif: values.motif,
         });
-        toast.success("Enregistrer avec success", {
+        toast.success("Enregistre avec succes", {
           position: "top-right",
           autoClose: 5000,
           hideProgressBar: false,
@@ -377,6 +411,7 @@ const AddConges = () => {
                     padding: '8px 20px',
                     '&:hover': {
                       backgroundColor: '#ce1212',
+                
                     }
                   }}
                 >
