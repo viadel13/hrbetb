@@ -1,10 +1,7 @@
 import { Box } from '@mui/material'
 import { Outlet } from 'react-router-dom'
 
-
-
-
-const Employe = () => {
+const Conge = () => {
 
   return (
 
@@ -30,4 +27,4 @@ const Employe = () => {
   )
 }
 
-export default Employe
+export default Conge

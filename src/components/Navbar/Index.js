@@ -2,8 +2,8 @@ import { AppBar, Box, IconButton, Stack, Toolbar, Typography, styled } from '@mu
 import user from '../../assets/images/user.svg';
 import logo from '../../assets/images/logo.svg';
 import hambuger from '../../assets/images/hambuger.svg';
-import { NavLink, useLocation } from 'react-router-dom';
-import { useLayoutEffect, useState } from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { menuActif } from '../../redux/reducers/rootReducer';
 import { Icon } from '@iconify/react';
@@ -13,13 +13,16 @@ const Navbar = () => {
   const location = useLocation();
   const activeLink = useSelector(state => state.betbhr.activeLink)
   const dispatch = useDispatch();
+  const navigate = useNavigate()
 
 
   useLayoutEffect(() => {
-    if (location.pathname === '/employes') {
-      dispatch(menuActif(true));
-    } else {
-      dispatch(menuActif(false));
+    if (location.pathname === '/dashboard') {
+      dispatch(menuActif(0));
+    } else if(location.pathname === '/employes'){
+      dispatch(menuActif(1));
+    }else{
+      dispatch(menuActif(2));
     }
   }, [location.pathname, dispatch]);
 
@@ -48,9 +51,9 @@ const Navbar = () => {
               <NavLink to="/dashboard" style={{  color: '#101214' }}>
                 <img src={logo} alt='logo' />
               </NavLink>
-              <Stack direction='row' spacing={2} sx={{ display: { xs: 'none', md: 'flex', } }}>
+              <Stack direction='row' spacing={2} sx={{ display: { xs: 'none', md: 'flex', } }} >
                 <NavLink to="/dashboard" style={{ textDecoration: 'none', color: '#101214' }}>
-                  <StyledBoxNav bgcolor={!activeLink ? "#101214" : 'white'} color={!activeLink ? "white" : '#101214'} onClick={() => dispatch(menuActif(false))}>
+                  <StyledBoxNav bgcolor={activeLink === 0 ? "#101214" : 'white'} color={activeLink === 0 ? "white" : '#101214'} >
                     <Typography sx={{
                       fontWeight: 400,
                       fontSize: 16
@@ -60,12 +63,22 @@ const Navbar = () => {
                   </StyledBoxNav>
                 </NavLink>
                 <NavLink to="/employes" style={{ textDecoration: 'none', color: '#101214' }}>
-                  <StyledBoxNav bgcolor={activeLink ? "#101214" : 'white'} color={activeLink ? "white" : '#101214'} onClick={() => dispatch(menuActif(true))}>
+                  <StyledBoxNav bgcolor={activeLink === 1 ? "#101214" : 'white'} color={activeLink === 1 ? "white" : '#101214'}>
                     <Typography sx={{
                       fontWeight: 400,
                       fontSize: 16
                     }}>
                       Employés
+                    </Typography>
+                  </StyledBoxNav>
+                </NavLink>
+                <NavLink to="/conges" style={{ textDecoration: 'none', color: '#101214' }}>
+                  <StyledBoxNav bgcolor={activeLink === 2 ? "#101214" : 'white'} color={activeLink === 2 ? "white" : '#101214'} >
+                    <Typography sx={{
+                      fontWeight: 400,
+                      fontSize: 16
+                    }}>
+                      Congés
                     </Typography>
                   </StyledBoxNav>
                 </NavLink>

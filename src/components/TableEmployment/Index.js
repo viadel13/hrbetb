@@ -5,7 +5,8 @@ import { useLocation } from 'react-router-dom';
 import { db } from '../../Firebase/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 
-const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, setSelectAll }) => {
+const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, setSelectAll, position }) => {
+
   const location = useLocation();
   const [datasTabFilter, setDatasTabFilter] = useState([]);
   const [daysOff, setDaysOff] = useState({});
@@ -22,20 +23,20 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
     }
   }, [datasTab, location.pathname]);
 
-  useEffect(() => {
-    const fetchDaysOff = async () => {
-      const daysOffData = {};
-      const otherAbsencesData = {};
-      for (const i of datasTab) {
-        daysOffData[i.matricule] = await fetchDocuments(i.matricule, year);
-        otherAbsencesData[i.matricule] = await fetchOtherAbsencesDocuments(i.matricule, year);
-      }
-      setDaysOff(daysOffData);
-      setOtherAbsences(otherAbsencesData);
-    };
+  // useEffect(() => {
+  //   const fetchDaysOff = async () => {
+  //     const daysOffData = {};
+  //     const otherAbsencesData = {};
+  //     for (const i of datasTab) {
+  //       daysOffData[i.matricule] = await fetchDocuments(i.matricule, year);
+  //       otherAbsencesData[i.matricule] = await fetchOtherAbsencesDocuments(i.matricule, year);
+  //     }
+  //     setDaysOff(daysOffData);
+  //     setOtherAbsences(otherAbsencesData);
+  //   };
 
-    fetchDaysOff();
-  }, [datasTab, year]);
+  //   fetchDaysOff();
+  // }, [datasTab, year]);
 
 
   const timestampToDate = (timestamp) => {
@@ -47,71 +48,71 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
     return date.toLocaleDateString('fr-FR', options);
   };
 
-  const fetchDocuments = async (matricule, year) => {
-    try {
-      const startOfYear = new Date(year, 0, 1);
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+  // const fetchDocuments = async (matricule, year) => {
+  //   try {
+  //     const startOfYear = new Date(year, 0, 1);
+  //     const endOfYear = new Date(year, 11, 31, 23, 59, 59);
 
-      const q = query(
-        collection(db, 'conges'),
-        where('matricule', '==', matricule),
-        where('typeAbscence', '==', 'Congés payé'),
-        where('dateDebut', '>=', startOfYear),
-        where('dateDebut', '<=', endOfYear)
-      );
+  //     const q = query(
+  //       collection(db, 'conges'),
+  //       where('matricule', '==', matricule),
+  //       where('typeAbscence', '==', 'Congés payé'),
+  //       where('dateDebut', '>=', startOfYear),
+  //       where('dateDebut', '<=', endOfYear)
+  //     );
 
-      const querySnapshot = await getDocs(q);
-      let totalDays = 0;
+  //     const querySnapshot = await getDocs(q);
+  //     let totalDays = 0;
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const dateDebut = data.dateDebut.toDate();
-        const dateFin = data.dateFin.toDate();
+  //     querySnapshot.forEach((doc) => {
+  //       const data = doc.data();
+  //       const dateDebut = data.dateDebut.toDate();
+  //       const dateFin = data.dateFin.toDate();
 
-        const diffTime = Math.abs(dateFin - dateDebut);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //       const diffTime = Math.abs(dateFin - dateDebut);
+  //       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        totalDays += diffDays;
-      });
+  //       totalDays += diffDays;
+  //     });
 
-      return totalDays;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des documents :', error);
-    }
-  };
+  //     return totalDays;
+  //   } catch (error) {
+  //     console.error('Erreur lors de la récupération des documents :', error);
+  //   }
+  // };
 
-  const fetchOtherAbsencesDocuments = async (matricule, year) => {
-    try {
-      const startOfYear = new Date(year, 0, 1);
-      const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+  // const fetchOtherAbsencesDocuments = async (matricule, year) => {
+  //   try {
+  //     const startOfYear = new Date(year, 0, 1);
+  //     const endOfYear = new Date(year, 11, 31, 23, 59, 59);
 
-      const q = query(
-        collection(db, 'conges'),
-        where('matricule', '==', matricule),
-        where('typeAbscence', '==', 'Autre Abscence'),
-        where('dateDebut', '>=', startOfYear),
-        where('dateDebut', '<=', endOfYear)
-      );
+  //     const q = query(
+  //       collection(db, 'conges'),
+  //       where('matricule', '==', matricule),
+  //       where('typeAbscence', '==', 'Autre Abscence'),
+  //       where('dateDebut', '>=', startOfYear),
+  //       where('dateDebut', '<=', endOfYear)
+  //     );
 
-      const querySnapshot = await getDocs(q);
-      let totalDays = 0;
+  //     const querySnapshot = await getDocs(q);
+  //     let totalDays = 0;
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const dateDebut = data.dateDebut.toDate();
-        const dateFin = data.dateFin.toDate();
+  //     querySnapshot.forEach((doc) => {
+  //       const data = doc.data();
+  //       const dateDebut = data.dateDebut.toDate();
+  //       const dateFin = data.dateFin.toDate();
 
-        const diffTime = Math.abs(dateFin - dateDebut);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  //       const diffTime = Math.abs(dateFin - dateDebut);
+  //       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-        totalDays += diffDays;
-      });
+  //       totalDays += diffDays;
+  //     });
 
-      return totalDays;
-    } catch (error) {
-      console.error('Erreur lors de la récupération des documents :', error);
-    }
-  };
+  //     return totalDays;
+  //   } catch (error) {
+  //     console.error('Erreur lors de la récupération des documents :', error);
+  //   }
+  // };
 
   const handleSelectRow = (index) => {
     const selectedIndex = selectedRows.indexOf(index);
@@ -243,23 +244,33 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                     </>
                   ) : (
                     <>
+                    
+                          <TableCell
+                            sx={{
+                              display: position ? 'none': 'block'
+                            }}
+                          >
+                            <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.matricule}</Typography>
+                          </TableCell>
+                  
+
                       <TableCell>
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.employe}</Typography>
                       </TableCell>
                       <TableCell >
                         <Typography
                           sx={{
-                            color: daysOff[i.matricule] !== undefined && daysOff[i.matricule] > 25 ? '#FF0000' : '#101214',
+                            color: i.conges && i.conges > 25 ? '#FF0000' : '#101214',
                             fontWeight: 'bold',
                             fontSize: '16px'
                           }}
                         >
-                          {daysOff[i.matricule] !== undefined ? `${daysOff[i.matricule]} / ${conges}` : 'Chargement...'}
+                          {i.conges ? `${i.conges} / ${conges}` : i.conges === 0  ?  i.conges : 'Chargement...'}
                         </Typography>
                       </TableCell>
                       <TableCell >
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>
-                          {otherAbsences[i.matricule] !== undefined ? otherAbsences[i.matricule] : 'Chargement...'}
+                          {i.autresAbsences ? i.autresAbsences : i.autresAbsences === 0 ? i.autresAbsences : 'Chargement...'}
                         </Typography>
                       </TableCell>
                     </>

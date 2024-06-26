@@ -4,7 +4,7 @@ import { datasCongesHead } from '../../datas/datasCongesHead';
 import { Icon } from '@iconify/react';
 import { useSelector } from 'react-redux';
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../Firebase/firebaseConfig';
 import Loader from '../Load/Index';
 import { datasHeadUsers } from '../../datas/datasHeadUsers';
@@ -23,6 +23,12 @@ const Home = () => {
   const [reloadConges, setReloadConges] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const[nombreEmploye, setNombreEmploye] = useState(0)
+  const[nombreAbscence, setNombreAbscence] = useState(0)
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []); 
 
 
   useEffect(() => {
@@ -30,35 +36,81 @@ const Home = () => {
     const q = query(collection(db, "employes"));
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const newDocs = {};
+      let count = 0;
       querySnapshot.forEach((doc) => {
         newDocs[doc.id] = doc.data();
+        count++;
       });
-      setDatasEmployes(Object.values(newDocs)); 
+      setDatasEmployes(Object.values(newDocs));
+      setNombreEmploye(count); 
       setLoad(false);
     });
+
+    const qAutreAbsence = query(
+      collection(db, "conges"),
+      where("typeAbscence", "==", "Autre Abscence")
+    );
+    const unsubscribeAutreAbsence = onSnapshot(qAutreAbsence, (querySnapshot) => {
+      const autreAbsenceDocs = {};
+      let autreAbsenceCount = 0;
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.motif && data.motif !== "RAS") { // Vérification si le motif n'est pas égal à "RAS"
+          autreAbsenceDocs[doc.id] = data;
+          autreAbsenceCount++;
+        }
+      });
+      setNombreAbscence(autreAbsenceCount); // Mettre à jour le nombre de documents "Autre Abscence" récupérés
+    });
+
     setReload(false);
     return () => {
       unsubscribe();
+      unsubscribeAutreAbsence();
     };
   }, [reload]);
 
   useEffect(() => {
-    setLoadConges(true);
-    const q = query(collection(db, "conges"));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const newDocs = {};
-      querySnapshot.forEach((doc) => {
-        newDocs[doc.id] = doc.data();
-      });
-      setDatasConges(Object.values(newDocs));
-      setLoadConges(false);
-    });
-    setReloadConges(false);
-    return () => {
-      unsubscribe();
-    };
-  }, [reloadConges]);
+    const fetchData = async () => {
+      setLoadConges(true);
+     
+      const q = query(collection(db, 'conges'));
 
+      const querySnapshot = await getDocs(q);
+      const aggregatedData = {};
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const matricule = data.matricule;
+
+        if (!aggregatedData[matricule]) {
+          aggregatedData[matricule] = {
+            employe: `${data.employe}`,
+            matricule: data.matricule,
+            conges: 0,
+            autresAbsences: 0
+          };
+        }
+
+        const dateDebut = data.dateDebut.toDate();
+        const dateFin = data.dateFin.toDate();
+        const diffTime = Math.abs(dateFin - dateDebut);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (data.typeAbscence === 'Congés payé') {
+          aggregatedData[matricule].conges += diffDays;
+        } else {
+          aggregatedData[matricule].autresAbsences += diffDays;
+        }
+      });
+
+      setDatasConges(Object.values(aggregatedData));
+      setLoadConges(false);
+    };
+
+    fetchData();
+    setReloadConges(false);
+  }, [reloadConges]);
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {
@@ -80,7 +132,7 @@ const Home = () => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          minHeight: '100vh',
+        
           backgroundColor: '#F9F9F9'
         }}
       >
@@ -144,12 +196,12 @@ const Home = () => {
                           <CardDetalUser
                             icon={<Icon icon="solar:users-group-two-rounded-outline" fontSize={20} />}
                             text='Employés total'
-                            nbre='06'
+                            nbre={nombreEmploye}
                           />
                           <CardDetalUser
                             icon={<Icon icon="solar:calendar-linear" fontSize={20} />}
                             text='Abscences totales'
-                            nbre='150'
+                            nbre={nombreAbscence}
                           />
                         </Stack>
 
@@ -164,9 +216,22 @@ const Home = () => {
                         p: 2,
 
                       }}>
-                        <Typography sx={{ fontSize: '20px', fontWeight: "bold" }}>
-                          Congés des employés
-                        </Typography>
+                        <Stack
+                          direction='row'
+                          sx={{
+                            alignItems: 'center',
+                            justifyContent: "space-between"
+                          }}>
+
+                          <Typography sx={{ fontSize: {xs: '18px', sm: '20px'}, fontWeight: "bold" }}>
+                            Congés des employés
+                          </Typography>
+                          <NavLink to="/conges" style={{ textDecoration: 'none' }}>
+                            <Typography sx={{ fontSize: {xs: '18px', sm: '16px'}, fontWeight: "bold", color: "#FF3F25" }}>
+                              Voir plus
+                            </Typography>
+                          </NavLink>
+                        </Stack>
                         <TableContainer sx={{ minWidth: '100%', mt: 2, whiteSpace: 'nowrap', overflowX: 'auto', '&::-webkit-scrollbar': { height: '8px' }, '&::-webkit-scrollbar-thumb': { backgroundColor: '#FF3F25', borderRadius: '8px' }, '&::-webkit-scrollbar-thumb:hover': { backgroundColor: '#FF5733' }, '&::-webkit-scrollbar-track': { backgroundColor: '#F0F0F0', borderRadius: '8px' } }}>
                           <Table>
                             <TableHead>
@@ -190,6 +255,7 @@ const Home = () => {
                               <TableEmployment
                                 datasTab={datasConges}
                                 nameTab="datasConges"
+                                position="home"
                                 selectedRows={selectedRows}
                                 setSelectedRows={setSelectedRows}
                                 setSelectAll={setSelectAll}
@@ -219,11 +285,11 @@ const Home = () => {
                   }}>
                     <Stack direction='row' justifyContent="space-between">
 
-                      <Typography sx={{ fontSize: '20px', fontWeight: "bold" }}>
+                      <Typography sx={{ fontSize: {xs: '18px', sm: '20px'}, fontWeight: "bold" }}>
                         Liste des employés
                       </Typography>
                       <NavLink to="/employes" style={{ textDecoration: 'none' }}>
-                        <Typography sx={{ fontSize: '16px', fontWeight: "bold", color: "#FF3F25" }}>
+                        <Typography sx={{ fontSize: {xs: '18px', sm: '16px'}, fontWeight: "bold", color: "#FF3F25" }}>
                           Voir plus
                         </Typography>
                       </NavLink>

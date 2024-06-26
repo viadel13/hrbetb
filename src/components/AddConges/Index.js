@@ -23,7 +23,7 @@ const AddConges = () => {
 
   useLayoutEffect(() => {
 
-    dispatch(menuActif(true));
+    dispatch(menuActif(2));
 
   }, [dispatch]);
 

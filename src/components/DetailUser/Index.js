@@ -1,7 +1,6 @@
 import { Box, Stack, Typography, styled, Select, MenuItem, Grid, TableContainer, Table, TableHead, TableRow, TableCell, Checkbox, CircularProgress } from '@mui/material'
 import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Card from '../Card/Index';
-import { datasCard } from '../../datas/datasCard';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../Firebase/firebaseConfig';
 import { datasDetailHead } from '../../datas/datasDetailHead';
@@ -21,18 +20,24 @@ const DetailUser = () => {
   const [datasDetailUser, setDatasDetailUser] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const[nbreConges, setNbreConges] = useState('');
-  const[nbreAbscence, setNbreAbscence] = useState('');
+  const [nbreConges, setNbreConges] = useState('');
+  const [nbreAbscence, setNbreAbscence] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state;
   const dispatch = useDispatch();
 
 
+
+  useEffect(() => {
+  
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []); 
+
+
+
   useLayoutEffect(() => {
-
-    dispatch(menuActif(true));
-
+    dispatch(menuActif(1));
   }, [dispatch]);
 
   const StyledSelect = styled(Select)(({ theme }) => ({
@@ -67,14 +72,14 @@ const DetailUser = () => {
       navigate('/employes');
     }
   }, [state, navigate]);
- 
+
   //recupere les documents
   useEffect(() => {
     const fetchDetailUser = async () => {
       setLoad(true);
 
       const startOfYear = new Date(selectDate, 0, 1);
-      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59); 
+      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59);
 
       const q = query(
         collection(db, 'conges'),
@@ -101,14 +106,14 @@ const DetailUser = () => {
     fetchDetailUser();
   }, [setReload, selectDate]);
 
-  
-  useEffect(()=>{
+
+  useEffect(() => {
     fetchDocuments()
     fetchOtherAbsencesDocuments()
   }, [selectDate])
 
 
-  
+
   const fetchDocuments = async () => {
     try {
       const startOfYear = new Date(selectDate, 0, 1);
@@ -141,7 +146,7 @@ const DetailUser = () => {
       console.error('Erreur lors de la récupération des documents :', error);
     }
   };
-  
+
   const fetchOtherAbsencesDocuments = async () => {
     try {
       const startOfYear = new Date(selectDate, 0, 1);
@@ -361,7 +366,7 @@ const DetailUser = () => {
                     <Grid item xs={12} sm={6} md={3} >
                       <Card
                         icon={<Icon icon="solar:calendar-linear" fontSize={25} />}
-                        name={ nbreConges !== '' ?  `${nbreConges}` : <CircularProgress size={18} sx={{color: 'white',}} /> }
+                        name={nbreConges !== '' ? `${nbreConges}` : <CircularProgress size={18} sx={{ color: 'white', }} />}
                         downName="Congés Pris"
                         maxConges={25}
                       />
@@ -369,7 +374,7 @@ const DetailUser = () => {
                     <Grid item xs={12} sm={6} md={3} >
                       <Card
                         icon={<Icon icon="solar:logout-outline" fontSize={25} />}
-                        name={nbreAbscence !== '' ?  `${nbreAbscence}` : <CircularProgress size={18} sx={{color: 'white',}} />}
+                        name={nbreAbscence !== '' ? `${nbreAbscence}` : <CircularProgress size={18} sx={{ color: 'white', }} />}
                         downName="Autres abscences"
                       />
                     </Grid>

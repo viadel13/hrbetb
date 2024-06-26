@@ -1,7 +1,5 @@
 import { Box, Checkbox, Grid, IconButton, Stack, Table, TableCell, TableContainer, TableHead, TableRow, Typography, styled } from '@mui/material';
-
-import add from '../../assets/images/add.svg';
-// import TableEmployment from '../TableEmployment/Index';
+import { Icon } from '@iconify/react';
 import { datasHeadUsers } from '../../datas/datasHeadUsers';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
@@ -17,6 +15,10 @@ const Employes = () => {
   const [datasEmployes, setDatasEmployes] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+
+  useEffect(() => {  
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []); 
 
 
   useEffect(() => {
@@ -110,61 +112,26 @@ const Employes = () => {
             </Stack>
           </Grid>
           <Grid item xs={12} sm={12} md={6} sx={{ alignItems: 'flex-end', display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-start', md: 'flex-end' } }}>
-            <Stack direction="row" spacing={2}>
-              <NavLink to="addConges" style={{ textDecoration: 'none', color: '#101214' }}>
+                <Stack direction="row" spacing={2}>
+                  <>
+                    <StyledBoxNav>
+                      <Icon icon="fluent:add-20-regular" />
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                      
+                        }}
+                      >
+                        Ajouter un employé
+                      </Typography>
+                     
+                    </StyledBoxNav>
+                  </>
+                </Stack>
 
-                <StyledBoxNav
-
-                >
-                  <img src={add} alt='add' />
-                  <Typography
-                    sx={{
-                      fontSize: 16,
-                      color: '#FFFFFF',
-                      ml: 1,
-                      display: { xs: 'none', sm: 'block' }
-                    }}
-                  >
-                    Ajouter un congé
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 16,
-                      color: '#FFFFFF',
-                      ml: 1,
-                      display: { xs: 'block', sm: 'none' }
-                    }}
-                  >
-                    congé
-                  </Typography>
-                </StyledBoxNav>
-              </NavLink>
-              <StyledBoxNav>
-                <img src={add} alt='add' />
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    color: '#FFFFFF',
-                    ml: 1,
-                    display: { xs: 'none', sm: 'block' }
-                  }}
-                >
-                  Nouveau employé
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: 16,
-                    color: '#FFFFFF',
-                    ml: 1,
-                    display: { xs: 'block', sm: 'none' }
-                  }}
-                >
-                  employé
-                </Typography>
-              </StyledBoxNav>
-            </Stack>
-
-          </Grid>
+              </Grid>
         </Grid>
       </Box>
       <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />

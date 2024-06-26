@@ -5,11 +5,11 @@ import BottomTab from '../BottomTab/Index'
 
 const Content = () => {
   return (
-    <Box>
+    <>
       <Navbar />
       <Outlet />
       <BottomTab />
-    </Box>
+    </>
   )
 }
 
