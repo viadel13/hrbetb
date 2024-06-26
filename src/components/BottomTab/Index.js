@@ -3,7 +3,8 @@ import { BottomNavigation, BottomNavigationAction, Box, Paper, styled } from '@m
 import home from '../../assets/images/hom.svg';
 import dashboard from '../../assets/images/dash.svg';
 import people from '../../assets/images/people.svg';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Icon } from '@iconify/react';
 
 const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
   '& .Mui-selected': {
@@ -15,68 +16,65 @@ const StyledBottomNavigation = styled(BottomNavigation)(({ theme }) => ({
     flex: 1, // Pour s'assurer que les éléments prennent toute la largeur disponible
   },
 }));
+
 const BottomTab = () => {
   const [value, setValue] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
   const icons = [
-    { src: dashboard, label: 'Dashboard' },
-    { src: people, label: 'Employes' },
-    { src: home, label: 'Conges' },
+    { src: "solar:home-smile-angle-linear" , label: 'Dashboard', path: '/dashboard' },
+    { src: "solar:users-group-two-rounded-broken", label: 'Employes', path: '/employes' },
+    { src: "solar:pen-new-square-outline", label: 'Conges', path: '/conges' },
   ];
 
-  // useEffect(()=>{
-  //   if(value === 0){
-  //     navigate(`/dashboard`);
-  //   }else if(value === 1){
-  //     navigate(`/employes`);
-  //   }else{
-  //     navigate(`/conges`);
-  //   }
-  // }, [value, navigate])
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const currentIndex = icons.findIndex(icon => icon.path === currentPath);
+    if (currentIndex !== -1) {
+      setValue(currentIndex);
+    }
+  }, [location.pathname]);
+
+  const handleChange = (event, newValue) => {
+    setValue(newValue);
+    navigate(icons[newValue].path);
+  };
 
   return (
-    <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: { xs: 'flex', md: 'none'} }} elevation={2}>
-    <StyledBottomNavigation
-      showLabels={true}
-      value={value}
-      onChange={(event, newValue) => {
-        setValue(newValue);
-      }}
-      sx={{ width: '100%', position: 'relative' }}
-    >
-      {icons.map((icon, index) => (
-        <BottomNavigationAction
-          key={index}
-          label={icon.label}
-          icon={
-            <img
-              src={icon.src}
-              alt={icon.label}
-              width={25}
-              height={25}
-              style={{
-                filter: value === index
-                  ? 'invert(44%) sepia(82%) saturate(2046%) hue-rotate(334deg) brightness(93%) contrast(96%)'
-                  : 'invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(0%)'
-              }}
-            />
-          }
+    <Paper sx={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: { xs: 'flex', md: 'none' } }} elevation={2}>
+      <StyledBottomNavigation
+        showLabels={true}
+        value={value}
+        onChange={handleChange}
+        sx={{ width: '100%', position: 'relative' }}
+      >
+        {icons.map((icon, index) => (
+          <BottomNavigationAction
+            key={index}
+            label={icon.label}
+            icon={
+              <Icon 
+                icon={icon.src}
+                color={value === index ? '#FF3F25' : '#BDBDBD'}
+                fontSize={25}
+              />
+            }
+          />
+        ))}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: `${(value / icons.length) * 100}%`,
+            width: `${100 / icons.length}%`,
+            height: '1px',
+            backgroundColor: '#FF3F25',
+            transition: 'left 0.3s',
+          }}
         />
-      ))}
-      <Box
-        sx={{
-          position: 'absolute',
-          bottom: 0,
-          left: `${(value / icons.length) * 100}%`,
-          width: `${100 / icons.length}%`,
-          height: '1px',
-          backgroundColor: '#FF3F25',
-          transition: 'left 0.3s',
-        }}
-      />
-    </StyledBottomNavigation>
-  </Paper>
-  )
-}
+      </StyledBottomNavigation>
+    </Paper>
+  );
+};
 
-export default BottomTab
+export default BottomTab;
