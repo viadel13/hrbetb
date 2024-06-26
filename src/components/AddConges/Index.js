@@ -200,6 +200,7 @@ const AddConges = () => {
       <Box sx={{
         px: 3,
         pt: 5,
+     
       }}>
         <Stack gap={1}>
           <Typography
@@ -248,7 +249,10 @@ const AddConges = () => {
               alignItems='center'
               gap={3}
               justifyContent='center'
-
+              sx={{
+          
+                mb: 10
+              }}
             >
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} style={{ width: '100%' }}>
                 <div style={{ width: '100%' }}>
