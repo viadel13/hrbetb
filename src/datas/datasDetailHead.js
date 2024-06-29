@@ -18,10 +18,7 @@ export const datasDetailHead = {
       name: 'Motif',
       icone: iconeTable,
     },
-    // {
-    //   name: 'Action',
-    //   icone: iconeTable,
-    // },
+
   ],
 
 };

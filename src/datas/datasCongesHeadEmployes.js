@@ -18,6 +18,7 @@ export const datasCongesHeadEmployes = {
       name: 'Autres absences',
       icone: iconeTable,
     },
+  
   ]
 
 };

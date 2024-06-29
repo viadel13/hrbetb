@@ -19,11 +19,11 @@ const Conges = () => {
   const [selectDate, setSelectDate] = useState(currentYear);
 
 
-  useEffect(() => {  
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []); 
+  }, []);
 
-  
+
   const StyledBoxNav = styled(IconButton)(({ theme }) => ({
 
     backgroundColor: '#101214',
@@ -66,8 +66,40 @@ const Conges = () => {
   };
 
   const years = generateYears(currentYear, 3);
-  
+
+  const excludedDays = [
+    '02-11',
+    '05-01',
+    '05-20',
+    '08-15',
+    '12-25',
+  ];
+
+  // Fonction pour vérifier si une date est exclue
+  const isExcludedDay = (date) => {
+    const dayMonth = ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2); // Extrait MM-DD
+    return date.getDay() === 0 || excludedDays.includes(dayMonth);
+  };
+
+  const calculateDiffDaysIgnoringExcludedDays = (startDate, endDate) => {
+    let currentDate = new Date(startDate);
+
+    let count = 0;
+
+    while (currentDate <= endDate) {
+      if (!isExcludedDay(currentDate)) {
+        count++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return count;
+  };
+
+
+
   useEffect(() => {
+
     const fetchData = async () => {
       setLoad(true);
       const startOfYear = new Date(selectDate, 0, 1);
@@ -91,20 +123,28 @@ const Conges = () => {
             employe: `${data.employe}`,
             matricule: data.matricule,
             conges: 0,
-            autresAbsences: 0
+            autresAbsences: 0,
           };
         }
 
         const dateDebut = data.dateDebut.toDate();
         const dateFin = data.dateFin.toDate();
-        const diffTime = Math.abs(dateFin - dateDebut);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const formattedDateDebut = new Date(dateDebut.getFullYear(), dateDebut.getMonth(), dateDebut.getDate());
+        const formattedDateFin = new Date(dateFin.getFullYear(), dateFin.getMonth(), dateFin.getDate());
+
+        const adjustedDiffDays = calculateDiffDaysIgnoringExcludedDays(formattedDateDebut, formattedDateFin);
 
         if (data.typeAbscence === 'Congés payé') {
-          aggregatedData[matricule].conges += diffDays;
+          aggregatedData[matricule].conges += adjustedDiffDays;
+
         } else {
-          aggregatedData[matricule].autresAbsences += diffDays;
+          aggregatedData[matricule].autresAbsences += adjustedDiffDays;
+
         }
+
+
+
       });
 
       setDatasConges(Object.values(aggregatedData));
@@ -114,6 +154,7 @@ const Conges = () => {
     fetchData();
     setReload(false);
   }, [reload, selectDate]);
+
 
 
   const handleSelectAll = (event) => {

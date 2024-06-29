@@ -1,4 +1,4 @@
-import { Autocomplete, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, styled } from '@mui/material'
+import { Autocomplete, Badge, Box, Button, CircularProgress, FormControl, InputLabel, MenuItem, Paper, Select, Stack, TextField, Typography, styled } from '@mui/material'
 import { DateField, DatePicker } from '@mui/x-date-pickers';
 import { addDoc, collection, getDocs, onSnapshot, query, where, } from 'firebase/firestore';
 import { useEffect, useLayoutEffect, useState } from 'react';
@@ -9,6 +9,35 @@ import { toast } from 'react-toastify';
 import { useDispatch } from 'react-redux';
 import { menuActif } from '../../redux/reducers/rootReducer';
 import Loader from '../Load/Index';
+import dayjs from 'dayjs';
+
+
+const disabledDates = [
+  new Date('2024-02-11'),
+  new Date('2024-05-01'),
+  new Date('2024-05-20'),
+  new Date('2024-01-01'),
+  new Date('2024-08-15'),
+  new Date('2024-12-25'),
+  new Date('2024-03-08'),
+  new Date('2024-01-01'),
+  new Date('2025-02-11'),
+  new Date('2025-05-01'),
+  new Date('2025-05-20'),
+  new Date('2025-01-01'),
+  new Date('2025-08-15'),
+  new Date('2025-12-25'),
+  new Date('2025-03-08'),
+  new Date('2025-01-01'),
+];
+
+const shouldDisableDate = (date) => {
+  const selectedDate = dayjs(date);
+ 
+  return selectedDate.day() === 0 ||
+    disabledDates.some(disabledDate => selectedDate.isSame(disabledDate, 'day')); 
+};
+
 
 
 const AddConges = () => {
@@ -67,6 +96,49 @@ const AddConges = () => {
     };
   }, [reload]);
 
+  
+
+  const calculateDiffDaysIgnoringExcludedDays = (startDate, endDate) => {
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+    while (currentDate <= endDate) {
+      count++;
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return count;
+  };
+
+  const splitCongesByYear = (dateDebut, dateFin) => {
+    const endOfYear = new Date(dateDebut.getFullYear(), 11, 31);
+    const startOfNextYear = new Date(dateDebut.getFullYear() + 1, 0, 1);
+
+    let firstPeriodDays = 0;
+    let secondPeriodDays = 0;
+
+    if (dateDebut.getFullYear() === dateFin.getFullYear()) {
+      firstPeriodDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, dateFin);
+    }
+    else {
+      // Les dates sont dans des années différentes
+      if (dateDebut.getFullYear() < dateFin.getFullYear()) {
+          firstPeriodDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, endOfYear);
+          secondPeriodDays = calculateDiffDaysIgnoringExcludedDays(startOfNextYear, dateFin);
+      } else {
+          // Les dates sont complètement dans l'année suivante
+          secondPeriodDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, dateFin);
+      }
+  }
+
+    return {
+      firstPeriodDays,
+      secondPeriodDays,
+    };
+  };
+
+
+
   const AddcongeSchema = Yup.object().shape({
     employe: Yup.string()
       .required(`Veuillez saisir le nom de l'employe!`),
@@ -97,7 +169,7 @@ const AddConges = () => {
       const dateFin = new Date(values.dateFin);
       try {
         if (values.dateDebut && values.dateFin) {
-          if (dateFin <= dateDebut) {
+          if (dateFin < dateDebut) {
             toast.error("Erreur sur la date", {
               position: "top-right",
               autoClose: 5000,
@@ -124,9 +196,9 @@ const AddConges = () => {
 
           // Vérifiez l'intersection des dates
           if (
-            (dateDebut >= existingDateDebut && dateDebut <= existingDateFin) ||
+            (dateDebut > existingDateDebut && dateDebut < existingDateFin) ||
             (dateFin >= existingDateDebut && dateFin <= existingDateFin) ||
-            (existingDateDebut >= dateDebut && existingDateDebut <= dateFin)
+            (existingDateDebut > dateDebut && existingDateDebut < dateFin)
           ) {
             conflictFound = true;
           }
@@ -147,14 +219,38 @@ const AddConges = () => {
           return;
         }
 
-        await addDoc(collection(db, "conges"), {
-          matricule: values.matricule,
-          employe: values.employe,
-          typeAbscence: values.typeAbscence,
-          dateDebut: new Date(values.dateDebut),
-          dateFin: new Date(values.dateFin),
-          motif: values.motif,
-        });
+        // const totalDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, dateFin);
+        const { firstPeriodDays, secondPeriodDays } = splitCongesByYear(dateDebut, dateFin);
+
+
+        if (firstPeriodDays > 0) {
+          await addDoc(collection(db, "conges"), {
+            matricule: values.matricule,
+            employe: values.employe,
+            typeAbscence: values.typeAbscence,
+            dateDebut: new Date(values.dateDebut),
+            dateFin: new Date(values.dateFin),
+            dateFin: dateDebut.getFullYear() === dateFin.getFullYear() ? new Date(values.dateFin) : new Date(dateDebut.getFullYear(), 11, 31),
+            motif: values.motif,
+            // jourAbscent: firstPeriodDays,
+            year: dateDebut.getFullYear()
+          });
+        }
+
+        if (secondPeriodDays > 0) {
+          await addDoc(collection(db, "conges"), {
+            matricule: values.matricule,
+            employe: values.employe,
+            typeAbscence: values.typeAbscence,
+            dateDebut: new Date(dateFin.getFullYear(), 0, 2),
+            dateFin: new Date(values.dateFin),
+            motif: values.motif,
+            // jourAbscent: secondPeriodDays,
+            year: dateFin.getFullYear()
+          });
+        }
+
+
         toast.success("Enregistre avec succes", {
           position: "top-right",
           autoClose: 5000,
@@ -200,7 +296,7 @@ const AddConges = () => {
       <Box sx={{
         px: 3,
         pt: 5,
-     
+
       }}>
         <Stack gap={1}>
           <Typography
@@ -250,7 +346,7 @@ const AddConges = () => {
               gap={3}
               justifyContent='center'
               sx={{
-          
+
                 mb: 10
               }}
             >
@@ -328,15 +424,12 @@ const AddConges = () => {
                 <div style={{ width: '100%' }}>
                   <FormControl fullWidth>
                     <Typography>Date de debut</Typography>
-                    {/* <DateField
-                      // defaultValue={formik.values.time}
-                      value={formik.values.dateDebut}
-                      onChange={(date) => formik.setFieldValue('dateDebut', date)}
-                      fullWidth sx={{ background: 'white' }}
-                    /> */}
+           
                     <DatePicker
                       value={formik.values.dateDebut}
                       onChange={(date) => formik.setFieldValue('dateDebut', date)}
+                      shouldDisableDate={shouldDisableDate}
+                      renderInput={(params) => <TextField {...params} />}
                     />
                   </FormControl>
                   {
@@ -350,14 +443,11 @@ const AddConges = () => {
                 <div style={{ width: '100%' }}>
                   <FormControl fullWidth>
                     <Typography>Date de fin</Typography>
-                    {/* <DateField
-                      value={formik.values.dateFin}
-                      onChange={(date) => formik.setFieldValue('dateFin', date)}
-                      fullWidth sx={{ background: 'white' }}
-                    /> */}
                     <DatePicker
                       value={formik.values.dateFin}
                       onChange={(date) => formik.setFieldValue('dateFin', date)}
+                         shouldDisableDate={shouldDisableDate}
+                      renderInput={(params) => <TextField {...params} />}
                     />
                   </FormControl>
                   {
@@ -415,7 +505,6 @@ const AddConges = () => {
                     padding: '8px 20px',
                     '&:hover': {
                       backgroundColor: '#ce1212',
-                
                     }
                   }}
                 >

@@ -7,14 +7,16 @@ import Employes from "../components/Employes/Index";
 import AddConges from "../components/AddConges/Index";
 import Conges from "../components/Conges/Index";
 import Conge from "../components/Conge/Index";
+import LogIn from "../components/LogIn/Index";
 
 
 const Root = () => {
   return (
     <Router>
       <Routes>
+        <Route path='/login' element={<LogIn />} />
         <Route path='/' element={<Content />} >
-          <Route index path='/' element={<Home />} />
+          <Route index element={<Home />} />
           <Route path='dashboard' element={<Home />} />
           <Route path='employes' element={<Employe />} >
             <Route index element={<Employes />} />

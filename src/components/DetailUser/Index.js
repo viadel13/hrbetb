@@ -17,6 +17,8 @@ const DetailUser = () => {
   const currentYear = new Date().getFullYear();
   const [selectDate, setSelectDate] = useState(currentYear);
   const [reload, setReload] = useState(false);
+  const [reloadCardInfos, setReloadCardInfos] = useState(false);
+  const [loadCardInfos, setLoadCardInfos] = useState(true);
   const [datasDetailUser, setDatasDetailUser] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -30,9 +32,9 @@ const DetailUser = () => {
 
 
   useEffect(() => {
-  
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []); 
+  }, []);
 
 
 
@@ -109,12 +111,43 @@ const DetailUser = () => {
 
   useEffect(() => {
     fetchDocuments()
-    fetchOtherAbsencesDocuments()
-  }, [selectDate])
+    setReloadCardInfos(false)
+  }, [selectDate, setReloadCardInfos])
+
+  const excludedDays = [
+    '02-11',
+    '05-01',
+    '05-20',
+    '08-15',
+    '12-25',
+
+  ];
 
 
+  const isExcludedDay = (date) => {
+    const dayMonth = ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2); // Extrait MM-DD
+    return date.getDay() === 0 || excludedDays.includes(dayMonth);
+  };
+
+  const calculateDiffDaysIgnoringExcludedDays = (startDate, endDate) => {
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+
+    while (currentDate <= endDate) {
+      if (!isExcludedDay(currentDate)) {
+        count++;
+      } else {
+
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return count;
+  };
 
   const fetchDocuments = async () => {
+    setLoadCardInfos(true);
     try {
       const startOfYear = new Date(selectDate, 0, 1);
       const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59);
@@ -122,64 +155,52 @@ const DetailUser = () => {
       const q = query(
         collection(db, 'conges'),
         where('matricule', '==', state.matricule),
-        where('typeAbscence', '==', 'Congés payé'),
         where('dateDebut', '>=', startOfYear),
         where('dateDebut', '<=', endOfYear)
       );
 
       const querySnapshot = await getDocs(q);
-      let totalDays = 0;
-
+      const aggregatedData = {};
       querySnapshot.forEach((doc) => {
         const data = doc.data();
+        const matricule = data.matricule;
+
+        if (!aggregatedData[matricule]) {
+          aggregatedData[matricule] = {
+            employe: `${data.employe}`,
+            matricule: data.matricule,
+            conges: 0,
+            autresAbsences: 0,
+          };
+        }
+
         const dateDebut = data.dateDebut.toDate();
         const dateFin = data.dateFin.toDate();
+        
+        
+        const adjustedDiffDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, dateFin);
 
-        const diffTime = Math.abs(dateFin - dateDebut);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (data.typeAbscence === 'Congés payé') {
+          aggregatedData[matricule].conges += adjustedDiffDays;
 
-        totalDays += diffDays;
+        } else {
+          aggregatedData[matricule].autresAbsences += adjustedDiffDays;
+        }
+
+
+
       });
-      totalDays ? setNbreConges(totalDays) : setNbreConges(0)
+      const nbreCongesForMatricule = aggregatedData[state.matricule]?.conges || 0;
+      const nbreAbscencesForMatricule = aggregatedData[state.matricule]?.autresAbsences || 0;
+      setNbreConges(nbreCongesForMatricule);
+      setNbreAbscence(nbreAbscencesForMatricule);
+      setLoadCardInfos(false);
+
 
     } catch (error) {
       console.error('Erreur lors de la récupération des documents :', error);
     }
   };
-
-  const fetchOtherAbsencesDocuments = async () => {
-    try {
-      const startOfYear = new Date(selectDate, 0, 1);
-      const endOfYear = new Date(selectDate, 11, 31, 23, 59, 59);
-
-      const q = query(
-        collection(db, 'conges'),
-        where('matricule', '==', state.matricule),
-        where('typeAbscence', '==', 'Autre Abscence'),
-        where('dateDebut', '>=', startOfYear),
-        where('dateDebut', '<=', endOfYear)
-      );
-
-      const querySnapshot = await getDocs(q);
-      let totalDays = 0;
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const dateDebut = data.dateDebut.toDate();
-        const dateFin = data.dateFin.toDate();
-
-        const diffTime = Math.abs(dateFin - dateDebut);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        totalDays += diffDays;
-      });
-
-      totalDays ? setNbreAbscence(totalDays) : setNbreAbscence(0)
-    } catch (error) {
-      console.error('Erreur lors de la récupération des documents :', error);
-    }
-  };
-
 
   const handleSelectAll = (event) => {
     if (event.target.checked) {

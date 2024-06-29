@@ -1,4 +1,4 @@
-import { Box, Checkbox, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
+import { Avatar, Box, Checkbox, Chip, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from '@mui/material';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
@@ -189,7 +189,9 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                               display: 'flex'
                             }}
                           >
-                            <img src='https://images.unsplash.com/photo-1615109398623-88346a601842?q=80&w=1374&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='user' width='100%' height='100%' style={{ borderRadius: 999, objectFit: 'cover' }} />
+                           <Avatar sx={{ backgroundColor: 'orange' }}>
+                            {i.nom.charAt(0)}{i.prenom.charAt(0)}
+                           </Avatar>
                           </Box>
                           <Box sx={{ border: '1px solid #E6E6E6', height: '26px' }} />
                           <Stack>
@@ -244,15 +246,15 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                     </>
                   ) : (
                     <>
-                    
-                          <TableCell
-                            sx={{
-                              display: position ? 'none': 'block'
-                            }}
-                          >
-                            <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.matricule}</Typography>
-                          </TableCell>
-                  
+
+                      <TableCell
+                        sx={{
+                          display: position ? 'none' : 'table-cell'
+                        }}
+                      >
+                        <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.matricule}</Typography>
+                      </TableCell>
+
 
                       <TableCell>
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>{i.employe}</Typography>
@@ -265,14 +267,18 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                             fontSize: '16px'
                           }}
                         >
-                          {i.conges ? `${i.conges} / ${conges}` : i.conges === 0  ?  i.conges : 'Chargement...'}
+                          {i.conges ? `${i.conges} / ${conges}` : i.conges === 0 ? i.conges : 'Chargement...'}
                         </Typography>
+
                       </TableCell>
                       <TableCell >
+
                         <Typography sx={{ color: '#101214', fontWeight: "bold", fontSize: '16px' }}>
                           {i.autresAbsences ? i.autresAbsences : i.autresAbsences === 0 ? i.autresAbsences : 'Chargement...'}
                         </Typography>
+
                       </TableCell>
+
                     </>
                   )
                 }

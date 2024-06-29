@@ -2,12 +2,13 @@ import { Box, Checkbox, Grid, Stack, Table, TableCell, TableContainer, TableHead
 import { NavLink } from 'react-router-dom';
 import { datasCongesHead } from '../../datas/datasCongesHead';
 import { Icon } from '@iconify/react';
-import { useSelector } from 'react-redux';
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Suspense, lazy, useEffect, useLayoutEffect, useState } from 'react';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../Firebase/firebaseConfig';
 import Loader from '../Load/Index';
 import { datasHeadUsers } from '../../datas/datasHeadUsers';
+import { menuActif } from '../../redux/reducers/rootReducer';
 const TableEmployment = lazy(() => import('../TableEmployment/Index'));
 const Horaire = lazy(() => import('../Horaire/Index'));
 const CardDetalUser = lazy(() => import('../CardDetalUser/Index'));
@@ -23,13 +24,17 @@ const Home = () => {
   const [reloadConges, setReloadConges] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  const[nombreEmploye, setNombreEmploye] = useState(0)
-  const[nombreAbscence, setNombreAbscence] = useState(0)
+  const [nombreEmploye, setNombreEmploye] = useState(0);
+  const [nombreAbscence, setNombreAbscence] = useState(0);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []); 
+  }, []);
 
+  useLayoutEffect(() => {
+    dispatch(menuActif(0));
+  }, [dispatch]);
 
   useEffect(() => {
     setLoad(true);
@@ -42,7 +47,7 @@ const Home = () => {
         count++;
       });
       setDatasEmployes(Object.values(newDocs));
-      setNombreEmploye(count); 
+      setNombreEmploye(count);
       setLoad(false);
     });
 
@@ -55,12 +60,12 @@ const Home = () => {
       let autreAbsenceCount = 0;
       querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.motif && data.motif !== "RAS") { // Vérification si le motif n'est pas égal à "RAS"
+        if (data.motif && data.motif !== "RAS") {
           autreAbsenceDocs[doc.id] = data;
           autreAbsenceCount++;
         }
       });
-      setNombreAbscence(autreAbsenceCount); // Mettre à jour le nombre de documents "Autre Abscence" récupérés
+      setNombreAbscence(autreAbsenceCount);
     });
 
     setReload(false);
@@ -70,11 +75,49 @@ const Home = () => {
     };
   }, [reload]);
 
+  const excludedDays = [
+    '02-11',
+    '05-01',
+    '05-20',
+    '08-15',
+    '12-25',
+
+ 
+  ];
+
+  // Fonction pour vérifier si une date est exclue
+  const isExcludedDay = (date, endDate) => {
+    const dayMonth = ("0" + (date.getMonth() + 1)).slice(-2) + '-' + ("0" + date.getDate()).slice(-2); // Extrait MM-DD
+    return date.getDay() === 0 || excludedDays.includes(dayMonth);
+  };
+
+  const calculateDiffDaysIgnoringExcludedDays = (startDate, endDate) => {
+    let currentDate = new Date(startDate);
+    let count = 0;
+
+    while (currentDate <= endDate) {
+      if (!isExcludedDay(currentDate)) {
+        count++;
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return count;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoadConges(true);
-     
-      const q = query(collection(db, 'conges'));
+      const currentYear = new Date().getFullYear();
+      const startOfYear = new Date(currentYear, 0, 1);
+      const endOfYear = new Date(currentYear + 1, 0, 1);
+
+      
+      const q = query(
+        collection(db, 'conges'),
+        where('dateDebut', '>=', startOfYear),
+        where('dateDebut', '<', endOfYear)
+      );
 
       const querySnapshot = await getDocs(q);
       const aggregatedData = {};
@@ -96,11 +139,12 @@ const Home = () => {
         const dateFin = data.dateFin.toDate();
         const diffTime = Math.abs(dateFin - dateDebut);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const adjustedDiffDays = calculateDiffDaysIgnoringExcludedDays(dateDebut, dateFin);
 
         if (data.typeAbscence === 'Congés payé') {
-          aggregatedData[matricule].conges += diffDays;
+          aggregatedData[matricule].conges += adjustedDiffDays;
         } else {
-          aggregatedData[matricule].autresAbsences += diffDays;
+          aggregatedData[matricule].autresAbsences += adjustedDiffDays;
         }
       });
 
@@ -132,7 +176,7 @@ const Home = () => {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-        
+
           backgroundColor: '#F9F9F9'
         }}
       >
@@ -223,11 +267,11 @@ const Home = () => {
                             justifyContent: "space-between"
                           }}>
 
-                          <Typography sx={{ fontSize: {xs: '18px', sm: '20px'}, fontWeight: "bold" }}>
+                          <Typography sx={{ fontSize: { xs: '18px', sm: '20px' }, fontWeight: "bold" }}>
                             Congés des employés
                           </Typography>
                           <NavLink to="/conges" style={{ textDecoration: 'none' }}>
-                            <Typography sx={{ fontSize: {xs: '18px', sm: '16px'}, fontWeight: "bold", color: "#FF3F25" }}>
+                            <Typography sx={{ fontSize: { xs: '18px', sm: '16px' }, fontWeight: "bold", color: "#FF3F25" }}>
                               Voir plus
                             </Typography>
                           </NavLink>
@@ -285,11 +329,11 @@ const Home = () => {
                   }}>
                     <Stack direction='row' justifyContent="space-between">
 
-                      <Typography sx={{ fontSize: {xs: '18px', sm: '20px'}, fontWeight: "bold" }}>
+                      <Typography sx={{ fontSize: { xs: '18px', sm: '20px' }, fontWeight: "bold" }}>
                         Liste des employés
                       </Typography>
                       <NavLink to="/employes" style={{ textDecoration: 'none' }}>
-                        <Typography sx={{ fontSize: {xs: '18px', sm: '16px'}, fontWeight: "bold", color: "#FF3F25" }}>
+                        <Typography sx={{ fontSize: { xs: '18px', sm: '16px' }, fontWeight: "bold", color: "#FF3F25" }}>
                           Voir plus
                         </Typography>
                       </NavLink>
