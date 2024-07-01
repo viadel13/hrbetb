@@ -3,9 +3,12 @@ import { Icon } from '@iconify/react';
 import { datasHeadUsers } from '../../datas/datasHeadUsers';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from '../../Firebase/firebaseConfig';
+import { auth, db } from '../../Firebase/firebaseConfig';
 import { NavLink } from 'react-router-dom';
 import Loader from '../Load/Index';
+import { useDispatch, useSelector } from 'react-redux';
+import { onAuthStateChanged } from 'firebase/auth';
+import { session } from '../../redux/reducers/rootReducer';
 const TableEmployment = lazy(() => import('../TableEmployment/Index'));
 
 
@@ -15,10 +18,21 @@ const Employes = () => {
   const [datasEmployes, setDatasEmployes] = useState([]);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const userSession = useSelector(state => state.betbhr.userSession);
+  const dispatch = useDispatch();
 
-  useEffect(() => {  
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []); 
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        dispatch(session(user));
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, dispatch]);
 
 
   useEffect(() => {
@@ -112,26 +126,31 @@ const Employes = () => {
             </Stack>
           </Grid>
           <Grid item xs={12} sm={12} md={6} sx={{ alignItems: 'flex-end', display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-start', md: 'flex-end' } }}>
+            {
+              userSession !== null && (
                 <Stack direction="row" spacing={2}>
-                  <>
-                    <StyledBoxNav>
-                      <Icon icon="fluent:add-20-regular" />
-                      <Typography
-                        sx={{
-                          fontSize: 16,
-                          color: '#FFFFFF',
-                          ml: 1,
-                      
-                        }}
-                      >
-                        Ajouter un employé
-                      </Typography>
-                     
-                    </StyledBoxNav>
-                  </>
-                </Stack>
+                <>
+                  <StyledBoxNav>
+                    <Icon icon="fluent:add-20-regular" />
+                    <Typography
+                      sx={{
+                        fontSize: 16,
+                        color: '#FFFFFF',
+                        ml: 1,
+  
+                      }}
+                    >
+                      Ajouter un employé
+                    </Typography>
+  
+                  </StyledBoxNav>
+                </>
+              </Stack>
+              )
+            }
+ 
 
-              </Grid>
+          </Grid>
         </Grid>
       </Box>
       <Box sx={{ border: '1px solid #E6E6E6', my: 3 }} />

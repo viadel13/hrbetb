@@ -1,4 +1,4 @@
-import { Box, Stack, Typography, styled, Select, MenuItem, Grid, TableContainer, Table, TableHead, TableRow, TableCell, Checkbox, CircularProgress } from '@mui/material'
+import { Box, Stack, Typography, styled, Select, MenuItem, Grid, TableContainer, Table, TableHead, TableRow, TableCell, Checkbox, CircularProgress, Avatar } from '@mui/material'
 import { Fragment, useEffect, useLayoutEffect, useState } from 'react'
 import Card from '../Card/Index';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
@@ -320,10 +320,12 @@ const DetailUser = () => {
                           justifyContent: 'center',
                           alignItems: 'center'
                         }}>
-                          <img src='https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?q=80&w=2076&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D' alt='img' style={{ objectFit: 'cover', width: '100%', height: '100%', borderRadius: 999, }} />
+                            <Avatar sx={{ backgroundColor: 'orange', objectFit: 'cover', width: '100%', height: '100%', borderRadius: 999, fontSize: 25  }}>
+                              {state.prenom.charAt(0)}{state.nom.charAt(0)}
+                           </Avatar>
                         </Box>
                         <Stack sx={{ justifyContent: 'space-between', display: { xs: 'none', sm: 'flex', md: 'flex' } }}>
-                          <Typography sx={{ fontSize: '18px', color: '#101214', fontWeight: 'bold' }}>{state.nom}</Typography>
+                          <Typography sx={{ fontSize: '18px', color: '#101214', fontWeight: 'bold' }}>{state.nom} {state.prenom}</Typography>
                           <Typography sx={{ fontSize: '15px', color: '#BDBDBD', fontWeight: 'bold' }}>Poste
 
                             <Typography sx={{ fontSize: '15px', color: '#101214', fontWeight: 'bold' }}>{state.poste}</Typography>

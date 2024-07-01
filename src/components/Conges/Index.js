@@ -4,8 +4,11 @@ import { Icon } from '@iconify/react';
 import { datasCongesHeadEmployes } from '../../datas/datasCongesHeadEmployes';
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { collection, getDocs, onSnapshot, query, where } from 'firebase/firestore';
-import { db } from '../../Firebase/firebaseConfig';
+import { auth, db } from '../../Firebase/firebaseConfig';
 import Loader from '../Load/Index';
+import { useDispatch, useSelector } from 'react-redux';
+import { onAuthStateChanged } from 'firebase/auth';
+import { session } from '../../redux/reducers/rootReducer';
 const TableEmployment = lazy(() => import('../TableEmployment/Index'));
 
 const Conges = () => {
@@ -17,11 +20,21 @@ const Conges = () => {
   const [selectAll, setSelectAll] = useState(false);
   const currentYear = new Date().getFullYear();
   const [selectDate, setSelectDate] = useState(currentYear);
-
+  const userSession = useSelector(state => state.betbhr.userSession);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        dispatch(session(user));
+      }
+    });
+    return () => unsubscribe();
+  }, [auth, dispatch]);
 
 
   const StyledBoxNav = styled(IconButton)(({ theme }) => ({
@@ -212,30 +225,34 @@ const Conges = () => {
           <Grid item xs={12} sm={12} md={6} sx={{ alignItems: 'flex-end', display: 'flex', justifyContent: { xs: 'flex-start', sm: 'flex-start', md: 'flex-end' } }}>
             <Stack direction="row" spacing={2}>
               <NavLink to="addConges" style={{ textDecoration: 'none', color: '#101214' }}>
-                <StyledBoxNav>
-                  <Icon icon="fluent:add-20-regular" />
-                  <Typography
-                    sx={{
-                      fontSize: 16,
-                      color: '#FFFFFF',
-                      ml: 1,
-                      display: { xs: 'none', sm: 'block' }
-                    }}
-                  >
-                    Ajouter un congé
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontSize: 16,
-                      color: '#FFFFFF',
-                      ml: 1,
-                      display: { xs: 'block', sm: 'none' }
-                    }}
-                  >
-                    congé
-                  </Typography>
+                {
+                  userSession !== null && (
+                    <StyledBoxNav>
+                      <Icon icon="fluent:add-20-regular" />
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'none', sm: 'block' }
+                        }}
+                      >
+                        Ajouter un congé
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: 16,
+                          color: '#FFFFFF',
+                          ml: 1,
+                          display: { xs: 'block', sm: 'none' }
+                        }}
+                      >
+                        congé
+                      </Typography>
 
-                </StyledBoxNav>
+                    </StyledBoxNav>
+                  )
+                }
               </NavLink>
               <StyledSelect
                 displayEmpty
@@ -303,6 +320,7 @@ const Conges = () => {
                   )}
                 </Table>
               </TableContainer>
+   
             </Suspense>
           )}
       </Box>

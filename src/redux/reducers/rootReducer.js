@@ -3,6 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   activeLink: null,
+  userSession: null
 }
 
 const betbhrSlice = createSlice({
@@ -15,12 +16,19 @@ const betbhrSlice = createSlice({
             ...state,
             activeLink: action.payload
           }
+        },
+
+        session: (state, action) => {
+          return{
+            ...state,
+            userSession: action.payload
+          }
         }
 
     }
 })
 
-export const { menuActif } =  betbhrSlice.actions;
+export const { menuActif, session } =  betbhrSlice.actions;
 
 
 export default  betbhrSlice.reducer;

@@ -5,7 +5,7 @@ import hambuger from '../../assets/images/hambuger.svg';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useLayoutEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { menuActif } from '../../redux/reducers/rootReducer';
+import { menuActif, session } from '../../redux/reducers/rootReducer';
 import { Icon } from '@iconify/react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
@@ -16,30 +16,29 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate()
   const [anchorEl, setAnchorEl] = useState(null);
-  const [userSession, setUserSession] = useState('');
   const auth = getAuth();
-
+  const userSession = useSelector(state=> state.betbhr.userSession)
   const open = Boolean(anchorEl);
-
-  console.log(userSession)
+  
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
     setAnchorEl(null);
   };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUserSession(user);
+        dispatch(session(user));
       }
     });
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, dispatch]);
 
   async function handleSignOut() {
     await signOut(auth);
-    setUserSession('');
+    dispatch(session(null));
     setAnchorEl(null);
 }
 
@@ -177,7 +176,7 @@ const Navbar = () => {
           Notification
         </MenuItem>
         {
-          userSession !== "" ? (
+          userSession !== null ? (
             <MenuItem onClick={handleSignOut}>LogOut</MenuItem>
           ) : (
             <NavLink to="/login" style={{ textDecoration: 'none', color: 'inherit' }}>

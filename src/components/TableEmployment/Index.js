@@ -190,12 +190,12 @@ const TableEmployment = ({ nameTab, datasTab, selectedRows, setSelectedRows, set
                             }}
                           >
                            <Avatar sx={{ backgroundColor: 'orange' }}>
-                            {i.nom.charAt(0)}{i.prenom.charAt(0)}
+                           {i.prenom.charAt(0)}{i.nom.charAt(0)}
                            </Avatar>
                           </Box>
                           <Box sx={{ border: '1px solid #E6E6E6', height: '26px' }} />
                           <Stack>
-                            <Typography sx={{ color: '#101214', fontSize: '16px', fontWeight: 'bold' }}>{i.nom} {i.prenom}</Typography>
+                            <Typography sx={{ color: '#101214', fontSize: '16px', fontWeight: 'bold' }}>{i.prenom} {i.nom} </Typography>
                             <Typography sx={{ color: '#BDBDBD', fontSize: '14px', fontWeight: 'bold' }}>{i.poste}</Typography>
                           </Stack>
                         </Stack>

@@ -108,7 +108,7 @@ const LogIn = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(90deg, #FF3F25 0%, #FF5733 100%)',
+        background: '#415a77',
         justifyContent: 'center',
         alignItems: 'center',
         display: 'flex',
